@@ -34,3 +34,4 @@ CMakeCache.txt
 Makefile
 *.cmake
 main
+.DS_Store
