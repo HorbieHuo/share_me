@@ -1,13 +1,15 @@
 #include "FileTransfer.h"
-
 #include <iostream>
 
+using namespace FileTransfer;
+
+FileTransferServer* FileTransferServer::inst = NULL;
+
 FileTransferServer* FileTransferServer::Instanse() {
-    static FileTransferServer* f = NULL;
-    if ( f == NULL ) {
-        f = new FileTransferServer();
+    if ( inst == NULL ) {
+        inst = new FileTransferServer();
     }
-    return f;
+    return inst;
 }
 
 bool FileTransferServer::Config() {

@@ -7,10 +7,14 @@
 #define EXPORT _declspec(dllimport)
 #endif
 
+namespace FileTransfer {
+
 class EXPORT FileTransferServer {
 private:
     FileTransferServer(){};
     ~FileTransferServer(){};
+
+    static FileTransferServer* inst;
 
 public:
     static FileTransferServer* Instanse();
@@ -18,5 +22,8 @@ public:
     bool Config();
 
 };
+
+};
+
 
 #endif

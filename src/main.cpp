@@ -3,7 +3,7 @@
 
 int main (int argc, char *argv[])
 {
-  FileTransferServer* f = FileTransferServer::Instanse();
+  FileTransfer::FileTransferServer* f = FileTransfer::FileTransferServer::Instanse();
   f->Config();
   return 0;
 }
