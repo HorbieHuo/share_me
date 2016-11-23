@@ -1,4 +1,20 @@
 cmake_minimum_required(VERSION 3.6)
 project(share_me)
 
+IF(UNIX)
+    ADD_DEFINITIONS(-D__unix__)
+ELSEIF(WIN32)
+    ADD_DEFINITIONS(-D_WIN32)
+ENDIF(UNIX)
+
+SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
+SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
+
+# ADD_SUBDIRECTORY(common)
+ADD_SUBDIRECTORY(FileTransfer)
+
+# INCLUDE_DIRECTORIES(./common/ftplib)
+
 add_executable(main main.cpp)
+
+# TARGET_LINK_LIBRARIES(main ftp)

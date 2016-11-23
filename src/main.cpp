@@ -2,8 +2,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+
+// #include "ftplib.h"
+
 int main (int argc, char *argv[])
 {
+  // FtpInit();
   if (argc < 2)
     {
         fprintf(stdout,"Usage: %s number\n",argv[0]);
