@@ -11,5 +11,6 @@ FileTransferServer* FileTransferServer::Instanse() {
 }
 
 bool FileTransferServer::Config() {
+    std::cout << "hello file transfer ..." << std::endl;
     return true;
 }
