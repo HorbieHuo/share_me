@@ -7,10 +7,22 @@
 #define EXPORT _declspec(dllimport)
 #endif
 
+#if defined(__unix__)
+#define SOXKET
+#elif defined(_WIN32)
+#define SOXKET
+#endif
+
+#include <list>
+
 namespace FileTransfer {
 
 class EXPORT FileTransferServer {
+    
 private:
+
+    std::list<int> socketFDs;
+
     FileTransferServer(){};
     ~FileTransferServer(){};
 
@@ -20,6 +32,7 @@ public:
     static FileTransferServer* Instanse();
 
     bool Config();
+    bool Start();
 
 };
 
