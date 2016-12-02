@@ -2,9 +2,9 @@
 
 using namespace share_me_utils;
 
-Socket::Socket() {}
+Socket::Socket(): m_addr(""), m_port(-1) {}
 
-Socket::Socket(int port) {}
+Socket::Socket(std::string addr, int port): m_addr(addr), m_port(port) {}
 
 Socket::~Socket() {}
 
@@ -12,7 +12,9 @@ bool Socket::Start() {
     return true;
 }
 
-bool Socket::Config(int port) {
+bool Socket::Config(std::string addr, int port) {
+    m_addr = addr;
+    m_port = port;
     return true;
 }
 
@@ -21,6 +23,10 @@ bool Socket::Reconnect() {
 }
 
 bool Socket::Connected() {
+    return true;
+}
+
+bool Socket::Connect() {
     return true;
 }
 

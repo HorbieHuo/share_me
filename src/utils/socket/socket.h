@@ -26,7 +26,7 @@ private:
 public:
 
     Socket();
-    Socket(int port);
+    Socket(std::string addr, int port);
     virtual ~Socket();
 
     bool Config(int port);
@@ -38,6 +38,7 @@ public:
 
 protected:
 
+    bool Connect();
 
 };
 
