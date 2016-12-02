@@ -11,6 +11,8 @@
 #include <arpa/inet.h>
 #endif
 
+#include <string>
+
 namespace share_me_utils {
 
 class Socket {
@@ -19,6 +21,7 @@ private:
     int m_socketInst;
 
     int m_port;
+    std::string m_addr;
 
 public:
 
@@ -31,10 +34,12 @@ public:
     bool Reconnect();
     bool Connected();
 
+
+
 protected:
 
 
-}
+};
 
 }
 

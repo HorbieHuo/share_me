@@ -4,15 +4,23 @@ using namespace share_me_utils;
 
 Socket::Socket() {}
 
+Socket::Socket(int port) {}
+
 Socket::~Socket() {}
 
-Socket::Start() {}
+bool Socket::Start() {
+    return true;
+}
 
-Socket::Config() {}
+bool Socket::Config(int port) {
+    return true;
+}
 
-Socket::Reconnect() {}
+bool Socket::Reconnect() {
+    return true;
+}
 
-Socket::Connected() {
+bool Socket::Connected() {
     return true;
 }
 
