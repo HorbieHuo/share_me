@@ -12,11 +12,16 @@
 #endif
 
 #include <string>
+#include <cstring>
 
 namespace share_me_utils {
 
+// #define INVALID_SOCKET_FD (-1)
+
 class Socket {
 private:
+
+    static int INVALID_SOCKET_FD;
 
     int m_socketInst;
 
