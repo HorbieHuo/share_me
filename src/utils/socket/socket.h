@@ -29,7 +29,7 @@ public:
     Socket(std::string addr, int port);
     virtual ~Socket();
 
-    bool Config(int port);
+    bool Config(std::string addr, int port);
     bool Start();
     bool Reconnect();
     bool Connected();
