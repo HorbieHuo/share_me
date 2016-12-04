@@ -44,6 +44,7 @@ public:
 protected:
 
     bool Connect();
+    bool Disconnect();
 
 };
 

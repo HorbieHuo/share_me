@@ -21,10 +21,12 @@ bool Socket::Config(std::string addr, int port) {
 }
 
 bool Socket::Reconnect() {
-    return true;
+    Disconnect();
+    return Connect();
 }
 
 bool Socket::Connected() {
+    if (m_socketInst < 0) return false;
     return true;
 }
 
@@ -37,7 +39,14 @@ bool Socket::Connect() {
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(m_port);
     inet_pton(AF_INET, m_addr.c_str(), &serverAddr.sin_addr);
-    connect(m_socketInst, (struct sockaddr*)&serverAddr, sizeof(serverAddr));
+    int isSuccess = connect(m_socketInst, (struct sockaddr*)&serverAddr, sizeof(serverAddr));
+    if (isSuccess < 0) return false;
+    return true;
+}
+
+bool Socket::Disconnect() {
+    if (m_socketInst < 0) return true;
+    close(m_socketInst);
     return true;
 }
 
