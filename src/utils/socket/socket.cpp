@@ -8,7 +8,9 @@ Socket::Socket(): m_addr(""), m_port(-1), m_socketInst() {}
 
 Socket::Socket(std::string addr, int port): m_addr(addr), m_port(port) {}
 
-Socket::~Socket() {}
+Socket::~Socket() {
+    Disconnect();
+}
 
 bool Socket::Start() {
     return Connect();
@@ -48,6 +50,7 @@ bool Socket::Connect() {
 bool Socket::Disconnect() {
     if (m_socketInst < 0) return true;
     close(m_socketInst);
+    m_socketInst = -1;
     return true;
 }
 
