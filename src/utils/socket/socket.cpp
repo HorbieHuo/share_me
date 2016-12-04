@@ -11,10 +11,11 @@ Socket::Socket(std::string addr, int port): m_addr(addr), m_port(port) {}
 Socket::~Socket() {}
 
 bool Socket::Start() {
-    return true;
+    return Connect();
 }
 
 bool Socket::Config(std::string addr, int port) {
+    if (Connected()) return false;
     m_addr = addr;
     m_port = port;
     return true;
@@ -47,6 +48,13 @@ bool Socket::Connect() {
 bool Socket::Disconnect() {
     if (m_socketInst < 0) return true;
     close(m_socketInst);
+    return true;
+}
+
+bool Socket::Send(std::string content) {
+    if (!Connected()) return false;
+    int isSuccess = send(m_socketInst, content.c_str(), content.length(), 0);
+    if (isSuccess < 0) return false;
     return true;
 }
 

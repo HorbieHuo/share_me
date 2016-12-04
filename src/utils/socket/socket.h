@@ -38,7 +38,7 @@ public:
     bool Start();
     bool Reconnect();
     bool Connected();
-
+    bool Send(std::string content);
 
 
 protected:
