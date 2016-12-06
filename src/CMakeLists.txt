@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.6)
 project(share_me)
 
+OPTION(GTEST "unittest, using googletest, default OFF" OFF)
+
 IF(UNIX)
     ADD_DEFINITIONS(-D__unix__)
 ELSEIF(WIN32)
@@ -15,12 +17,15 @@ ADD_SUBDIRECTORY(utils)
 
 INCLUDE_DIRECTORIES(./FileTransfer)
 
-IF(${GTEST} STREQUAL "ON")
+IF(${GTEST})
     IF(NOT ${GTEST_ROOT})
         SET(GTEST_ROOT ${PROJECT_SOURCE_DIR}/../external_dependencies/googletest)
-    ENDIF(NOT ${GTEST_ROOT})
+    ENDIF()
     INCLUDE_DIRECTORIES(${GTEST_ROOT}/googletest/include)
-ENDIF(GTEST)
+    MESSAGE(STATUS "GTEST is ON")
+ELSE()
+    MESSAGE(STATUS "GTEST is OFF")
+ENDIF()
 
 add_executable(main main.cpp)
 
