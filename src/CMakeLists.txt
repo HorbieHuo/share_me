@@ -15,6 +15,13 @@ ADD_SUBDIRECTORY(utils)
 
 INCLUDE_DIRECTORIES(./FileTransfer)
 
+IF(${GTEST} STREQUAL "ON")
+    IF(NOT ${GTEST_ROOT})
+        SET(GTEST_ROOT ${PROJECT_SOURCE_DIR}/../external_dependencies/googletest)
+    ENDIF(NOT ${GTEST_ROOT})
+    INCLUDE_DIRECTORIES(${GTEST_ROOT}/googletest/include)
+ENDIF(GTEST)
+
 add_executable(main main.cpp)
 
 TARGET_LINK_LIBRARIES(main FileTransfer)

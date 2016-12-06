@@ -35,3 +35,4 @@ Makefile
 *.cmake
 main
 .DS_Store
+external_dependencies
