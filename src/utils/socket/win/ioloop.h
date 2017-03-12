@@ -4,6 +4,8 @@
 #include <iostream>
 #include <mswsock.h>
 
+#include "soxket.h"
+
 namespace share_me_utils {
 
     #define SEND 0
@@ -52,8 +54,17 @@ namespace share_me_utils {
             HANDLE* m_thread;
             vector<PER_HANDLE_DATA* > m_inSockets;
             vector<PER_HANDLE_DATA* > m_outSockets;
+            vector<PER_HANDLE_DATA* > m_serverSockets;
+            HANDLE m_completionPort;
 
         public:
             static IOLoop* Instanse();
+
+            void Run();
+            bool Init(Socket* socket);
+
+            bool AddServerSocket(Socket* socket);
+            bool AddClientSocket(Socket* socket);
+            DWORD WINAPI ServerWorkThread(LPVOID CompletionPortID);
     };
 }

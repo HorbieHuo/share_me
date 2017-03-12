@@ -1,6 +1,6 @@
 #include "socket.h"
 
-using namespace SOCKET;
+namespace SOCKET{
 
 Socket::Socket():m_socketHandle(0), m_port(-1), m_addr({0}) {}
 
@@ -45,4 +45,6 @@ bool Socket::init() {
         return false;
     }
     return true;
+}
+
 }

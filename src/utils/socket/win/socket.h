@@ -5,20 +5,21 @@
 #include "../isocket.h"
 
 namespace share_me_utils {
-    class Socket: public ISocket {
-        public:
-            Socket();
-            Socket(string ip, int port);
+class Socket: public ISocket {
+    public:
+        Socket();
+        Socket(string ip, int port);
 
-            void Set();
+        void Set();
+        void GetHandle();
 
-        private:
+    private:
 
-            bool init();
+        bool init();
 
-            SOCKET m_socketHandle;
-            struct addrinfo m_addr;
-            int port;
-            WSADATA m_ws;
-    };
+        SOCKET m_socketHandle;
+        struct addrinfo m_addr;
+        int port;
+        WSADATA m_ws;
+};
 }
