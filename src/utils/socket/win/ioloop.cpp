@@ -22,7 +22,7 @@ IOLoop::~IOLoop() {
     }
 }
 
-bool IOLoop::Init(Socket* socket) {
+bool IOLoop::Init() {
     m_completionPort = CreateIoCompletionPort(INVALID_HANDLE_VALUE,NULL, 0, 0);
     if (!m_completionPort) return false;
     SYSTEM_INFO mySysInfo;
@@ -30,86 +30,91 @@ bool IOLoop::Init(Socket* socket) {
  
     // 创建 2 * CPU核数 + 1 个线程
     DWORD threadID;
-    for( DWORDi =0; i <( mySysInfo.dwNumberOfProcessors* 2+ 1); ++i )
+    for( DWORDi =0; i <( mySysInfo.dwNumberOfProcessors); ++i )
     {
         HANDLE threadHandle;
         threadHandle= CreateThread(NULL, 0, ServerWorkThread,completionPort,0, &threadID );
         if( threadHandle== NULL)
         {
-            std::cout<< "CreateThread failed. Error:"<< GetLastError()<< std::endl;
+            // std::cout<< "CreateThread failed. Error:"<< GetLastError()<< std::endl;
             return false;
         }
         CloseHandle(threadHandle );
     }
-    if (!socket) return true;
+    return true;
 }
 
-DWORD WINAPI IOLoop::ServerWorkThread(LPVOID CompletionPortID) {
-    HANDLEcomplationPort =(HANDLE)CompletionPortID;
-    DWORDbytesTransferred;
-    LPPER_HANDLE_DATApHandleData =NULL;
-    LPPER_IO_OPERATION_DATApIoData =NULL;
-    DWORDsendBytes =0;
-    DWORDrecvBytes =0;
-    DWORDflags;
+static DWORD WINAPI ServerWorkThread(LPVOID CompletionPortID) {
+    HANDLE complationPort =(HANDLE)CompletionPortID;
+    DWORD bytesTransferred;
+    LPPER_HANDLE_DATA pHandleData =NULL;
+    LPPER_IO_OPERATION_DATA pIoData =NULL;
+    DWORD sendBytes =0;
+    DWORD recvBytes =0;
+    DWORD flags;
  
     while( 1)
     {
-        if( GetQueuedCompletionStatus(complationPort,&bytesTransferred,(PULONG_PTR)&pHandleData,(LPOVERLAPPED*)&pIoData,INFINITE )== 0)
+        if( GetQueuedCompletionStatus(
+            complationPort,
+            &bytesTransferred,
+            (PULONG_PTR)&pHandleData,
+            (LPOVERLAPPED*)&pIoData,
+            INFINITE ) == 0)
         {
-            std::cout<< "GetQueuedCompletionStatus failed. Error:"<< GetLastError()<< std::endl;
-            return0;
+            // std::cout<< "GetQueuedCompletionStatus failed. Error:"<< GetLastError()<< std::endl;
+            return 0;
         }
  
-        // 检查数据是否已经传输完了
-        if( bytesTransferred== 0)
+        // 检查本次是否有数据接收,如没有，是为程序结束信号，则结束本线程
+        if( bytesTransferred == 0)
         {
-            std::cout<< " Start closing socket..."<< std::endl;
-            if( CloseHandle((HANDLE)pHandleData->socket) ==SOCKET_ERROR )
+            // std::cout<< " Start closing socket..."<< std::endl;
+            if( CloseHandle((HANDLE)pHandleData->socket) == SOCKET_ERROR )
             {
-                std::cout<< "Close socket failed. Error:"<< GetLastError()<< std::endl;
-                return0;
+                // std::cout<< "Close socket failed. Error:"<< GetLastError()<< std::endl;
+                return 0;
             }
  
-            GlobalFree(pHandleData );
-            GlobalFree(pIoData );
+            GlobalFree(pHandleData);
+            GlobalFree(pIoData);
             continue;
         }
  
         // 检查管道里是否有数据
-        if( pIoData->bytesRecv== 0)
+        if( pIoData->bytesRecv == 0)
         {
-            pIoData->bytesRecv= bytesTransferred;
-            pIoData->bytesSend= 0;
+            pIoData->bytesRecv = bytesTransferred;
+            pIoData->bytesSend = 0;
         }
         else
         {
-            pIoData->bytesSend+= bytesTransferred;
+            pIoData->bytesSend += bytesTransferred;
         }
  
         // 数据没有发完，继续发送
-        if( pIoData->bytesRecv> pIoData->bytesSend)
+        if( pIoData->bytesRecv > pIoData->bytesSend)
         {
             ZeroMemory(&(pIoData->overlapped),sizeof( OVERLAPPED ));
             pIoData->databuff.buf= pIoData->buffer+ pIoData->bytesSend;
             pIoData->databuff.len= pIoData->bytesRecv- pIoData->bytesSend;
  
             // 发送数据出去
-            if( WSASend(pHandleData->socket,&(pIoData->databuff),1, &sendBytes, 0, &(pIoData->overlapped),NULL )== SOCKET_ERROR)
+            if( WSASend(pHandleData->socket,&(pIoData->databuff),1, &sendBytes, 0, &(pIoData->overlapped),NULL ) == SOCKET_ERROR)
             {
-                if( WSAGetLastError()!= ERROR_IO_PENDING)
+                if( WSAGetLastError()!= ERROR_IO_PENDING )
                 {
-                    std::cout<< "WSASend() failed. Error:"<< GetLastError()<< std::endl;
-                    return0;
+                    // std::cout<< "WSASend() failed. Error:"<< GetLastError()<< std::endl;
+                    return 0;
                 }
                 else
                 {
-                    std::cout<< "WSASend() failed. io pending. Error:"<< GetLastError()<< std::endl;
-                    return0;
+                    // std::cout<< "WSASend() failed. io pending. Error:"<< GetLastError()<< std::endl;
+                    return 0;
                 }
             }
  
-            std::cout<< "Send "<< pIoData->buffer<< std::endl;
+            // std::cout<< "Send "<< pIoData->buffer<< std::endl;
         }
         else
         {
@@ -122,15 +127,15 @@ DWORD WINAPI IOLoop::ServerWorkThread(LPVOID CompletionPortID) {
  
             if( WSARecv(pHandleData->socket,&(pIoData->databuff),1, &recvBytes, &flags, &(pIoData->overlapped),NULL )== SOCKET_ERROR)
             {
-                if( WSAGetLastError()!= ERROR_IO_PENDING)
+                if( WSAGetLastError() != ERROR_IO_PENDING)
                 {
-                    std::cout<< "WSARecv() failed. Error:"<< GetLastError()<< std::endl;
-                    return0;
+                    // std::cout<< "WSARecv() failed. Error:"<< GetLastError()<< std::endl;
+                    return 0;
                 }
                 else
                 {
-                    std::cout<< "WSARecv() io pending"<< std::endl;
-                    return0;
+                    // std::cout<< "WSARecv() io pending"<< std::endl;
+                    return 0;
                 }
             }
         }
