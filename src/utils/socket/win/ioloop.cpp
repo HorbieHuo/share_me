@@ -80,63 +80,26 @@ static DWORD WINAPI ServerWorkThread(LPVOID CompletionPortID) {
             GlobalFree(pIoData);
             continue;
         }
- 
-        // 检查管道里是否有数据
-        if( pIoData->bytesRecv == 0)
-        {
-            pIoData->bytesRecv = bytesTransferred;
-            pIoData->bytesSend = 0;
+
+        if (pIoData->callback) {
+            pIoData->callback(pIoData->databuff.buf, bytesTransferred);
         }
-        else
+        
+        ZeroMemory(&(pIoData->overlapped), sizeof( OVERLAPPED ));
+        pIoData->databuff.len= DataBuffSize;
+        pIoData->databuff.buf= pIoData->buffer;
+
+        if( WSARecv(pHandleData->socket,&(pIoData->databuff),1, &recvBytes, &flags, &(pIoData->overlapped),NULL )== SOCKET_ERROR)
         {
-            pIoData->bytesSend += bytesTransferred;
-        }
- 
-        // 数据没有发完，继续发送
-        if( pIoData->bytesRecv > pIoData->bytesSend)
-        {
-            ZeroMemory(&(pIoData->overlapped),sizeof( OVERLAPPED ));
-            pIoData->databuff.buf= pIoData->buffer+ pIoData->bytesSend;
-            pIoData->databuff.len= pIoData->bytesRecv- pIoData->bytesSend;
- 
-            // 发送数据出去
-            if( WSASend(pHandleData->socket,&(pIoData->databuff),1, &sendBytes, 0, &(pIoData->overlapped),NULL ) == SOCKET_ERROR)
+            if( WSAGetLastError() != ERROR_IO_PENDING)
             {
-                if( WSAGetLastError()!= ERROR_IO_PENDING )
-                {
-                    // std::cout<< "WSASend() failed. Error:"<< GetLastError()<< std::endl;
-                    return 0;
-                }
-                else
-                {
-                    // std::cout<< "WSASend() failed. io pending. Error:"<< GetLastError()<< std::endl;
-                    return 0;
-                }
+                // std::cout<< "WSARecv() failed. Error:"<< GetLastError()<< std::endl;
+                return 0;
             }
- 
-            // std::cout<< "Send "<< pIoData->buffer<< std::endl;
-        }
-        else
-        {
-            pIoData->bytesRecv= 0;
-            flags= 0;
- 
-            ZeroMemory(&(pIoData->overlapped),sizeof( OVERLAPPED ));
-            pIoData->databuff.len= DataBuffSize;
-            pIoData->databuff.buf= pIoData->buffer;
- 
-            if( WSARecv(pHandleData->socket,&(pIoData->databuff),1, &recvBytes, &flags, &(pIoData->overlapped),NULL )== SOCKET_ERROR)
+            else
             {
-                if( WSAGetLastError() != ERROR_IO_PENDING)
-                {
-                    // std::cout<< "WSARecv() failed. Error:"<< GetLastError()<< std::endl;
-                    return 0;
-                }
-                else
-                {
-                    // std::cout<< "WSARecv() io pending"<< std::endl;
-                    return 0;
-                }
+                // std::cout<< "WSARecv() io pending"<< std::endl;
+                return 0;
             }
         }
     }

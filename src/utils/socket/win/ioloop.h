@@ -26,6 +26,7 @@ namespace share_me_utils {
         int BufferLen;
         int operationType;
         SOCKET client;
+        bool (*callback)(char* data, int length);
     }PER_IO_OPERATEION_DATA, *LPPER_IO_OPERATION_DATA, *LPPER_IO_DATA, PER_IO_DATA;
 
     /**
