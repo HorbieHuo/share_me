@@ -105,5 +105,21 @@ static DWORD IOLoop::ServerWorkThread(LPVOID CompletionPortID) {
     }
 }
 
+void IOLoop::AddServerSocket(Socket* socket) {
+    if (!socket) return ;
+    HANDLE socketHandle = socket->GetHandle();
+    CreateIoCompletionPort(socketHandle, m_completionPort, (DWORD)socket, 0);
+    LPPER_IO_DATA perIoData = new PER_IO_DATA;
+    memset(&(PerIoData->overlapped), sizeof(OVERLAPPED), 0);
+    perIoData->databuff.len = DATA_BUF_SIZE;
+    perIoData->databuff.buf = perIoData->buffer;
+    perIoData->operationType = START_ACCEPT;
+    PostQueuedCompletionStatus(m_completionPort, (DWORD)sizeof(int), (DWORD)socket, (LPOVERLAPPED)perIoData);
+}
+
+bool IOLoop::AddClientSocket(Socket* socket) {
+    // TODO 作为客户端Socket 加入io的过程
+}
+
 }
 

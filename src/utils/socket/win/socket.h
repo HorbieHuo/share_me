@@ -14,7 +14,7 @@ class Socket: public ISocket {
         Socket(string ip, int port, SOCKET_TYPE socketType);
 
         void Set();
-        void GetHandle();
+        HANDLE GetHandle() { return m_socketHandle; }
         SOCKET_TYPE GetSocketType() { return m_socketType; }
         bool Start();
 

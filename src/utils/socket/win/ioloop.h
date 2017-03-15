@@ -11,21 +11,21 @@ namespace share_me_utils {
     #define SEND ((unsigned long)1)
     #define RECV ((unsigned long)1 << 1)
     #define ACCEPT ((unsigned long)1 << 2)
+    #define START_ACCEPT ((unsigned long)1 << 3)
 
 
     /**
     * 结构体名称：PER_IO_DATA
     * 结构体功能：重叠I/O需要用到的结构体，临时记录IO数据
     **/
-    const int DataBuffSize = 4 * 1024;
+    #define DATA_BUF_SIZE  (4 * 1024)
     typedef struct
     {
         OVERLAPPED overlapped;
         WSABUF databuff;
-        char buffer[DataBuffSize];
+        char buffer[DATA_BUF_SIZE];
         int BufferLen;
         int operationType;
-        bool (*callback)(char* data, int length);
     }PER_IO_OPERATEION_DATA, *LPPER_IO_OPERATION_DATA, *LPPER_IO_DATA, PER_IO_DATA;
 
     /**

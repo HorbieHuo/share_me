@@ -41,6 +41,12 @@ bool Socket::init() {
 
 bool Socket::Start() {
     if (!m_socketHandle) return false;
+    IOLoop* io = IOLoop::Instance();
+    if (!io) return false;
+    CreateIoCompletionPort(m_socketHandle, io, (DWORD)PerHandleData, 0);
+    if (m_socketType == CLIENT) {
+
+    }
 }
 
 }
