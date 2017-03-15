@@ -6,8 +6,10 @@ namespace share_me_utils {
         public:
 
         enum SOCKET_TYPE {
+            MIN_INVALID,
             CLIENT,
             SERVER,
+            MAX_INVALID
         };
 
 

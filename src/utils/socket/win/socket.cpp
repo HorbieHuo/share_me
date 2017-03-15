@@ -19,15 +19,23 @@ Socket::Socket(string ip, int port, SOCKET_TYPE socketType) {
 }
 
 bool Socket::init() {
+    if (m_socketType >= MAX_INVALID || m_socketType <= MIN_INVALID) return false;
+    if (port <= 0) return false;
     WSADATA ws;
     if ( WSAStartup(MAKEWORD(2,2), &ws) != 0 ) {
         return false;
     }
     m_socketHandle = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
-    if (SOCKET_ERROR == bind(m_sockListen, (struct sockaddr *) &m_addr, sizeof(m_addr))) {
-        return false;
-    }
-    // TODO 根据socketType确定绑定或者连接socket
+    if (m_socketType == CLIENT) {
+        if (connect(m_socketHandle, (SOCKADDR*)&m_addr, sizeof(m_addr)) != 0) {
+            return false;
+        }
+    } else if {
+        if (SOCKET_ERROR == bind(m_sockListen, (struct sockaddr *) &m_addr, sizeof(m_addr))) {
+            return false;
+        }
+        if (listen(m_socketHandle, 10) != 0) return false;
+    } else return false;
     return true;
 }
 
