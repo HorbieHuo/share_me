@@ -39,4 +39,8 @@ bool Socket::init() {
     return true;
 }
 
+bool Socket::Start() {
+    if (!m_socketHandle) return false;
+}
+
 }
