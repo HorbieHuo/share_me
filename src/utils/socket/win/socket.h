@@ -13,12 +13,14 @@ class Socket: public ISocket {
         Socket(int port);
         Socket(string ip, int port, SOCKET_TYPE socketType);
 
-        void Set();
+        void Set(SOCKET_TYPE socketType);
         HANDLE GetHandle() { return m_socketHandle; }
         SOCKET_TYPE GetSocketType() { return m_socketType; }
         bool Start();
 
         bool SetDataHandleFunc(DataHandleCallback func);
+
+        bool PostAcceptMsg();
 
     private:
 

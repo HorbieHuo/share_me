@@ -18,6 +18,10 @@ Socket::Socket(string ip, int port, SOCKET_TYPE socketType) {
     m_socketType = socketType;
 }
 
+void Socket::Set(SOCKET_TYPE socketType) {
+    m_socketType = socketType;
+}
+
 bool Socket::init() {
     if (m_socketType >= MAX_INVALID || m_socketType <= MIN_INVALID) return false;
     if (port <= 0) return false;
@@ -30,12 +34,16 @@ bool Socket::init() {
         if (connect(m_socketHandle, (SOCKADDR*)&m_addr, sizeof(m_addr)) != 0) {
             return false;
         }
-    } else if {
+    } else if (m_socketType == SERVER) {
         if (SOCKET_ERROR == bind(m_sockListen, (struct sockaddr *) &m_addr, sizeof(m_addr))) {
             return false;
         }
         if (listen(m_socketHandle, 10) != 0) return false;
-    } else return false;
+    } else if (m_socketType == ACCEPT) {
+        // nothing to do
+    } else {
+        return false;
+    }
     return true;
 }
 
@@ -47,6 +55,20 @@ bool Socket::Start() {
     if (m_socketType == CLIENT) {
 
     }
+}
+
+bool Socket::PostAcceptMsg() {
+    if (m_socketType != SERVER) return false;
+    LPPER_IO_DATA perIoData = new PER_IO_DATA;
+    memset(&(PerIoData->overlapped), sizeof(OVERLAPPED), 0);
+    perIoData->databuff.len = DATA_BUF_SIZE;
+    perIoData->databuff.buf = perIoData->buffer;
+    perIoData->operationType = START_ACCEPT;
+    lpfnAcceptEx(Listen,perIoData->client,perIoData->dataBuffer,
+             perIoData->dataLength-((sizeof(SOCKADDR_IN)+16)*2),
+             sizeof(SOCKADDR_IN)+16,sizeof(SOCKADDR_IN)+16,&dwBytes,
+             &(perIoData->overlapped));
+
 }
 
 }
