@@ -119,6 +119,10 @@ void IOLoop::AddServerSocket(Socket* socket) {
 
 bool IOLoop::AddClientSocket(Socket* socket) {
     // TODO 作为客户端Socket 加入io的过程
+    if (!socket) return false;
+    HANDLE socketHandle = socket->GetHandle();
+    CreateIoCompletionPort(socketHandle, m_completionPort, (DWORD)socket, 0);
+    return true;
 }
 
 }
