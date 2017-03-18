@@ -1,9 +1,20 @@
+cmake_minimum_required(VERSION 3.6)
+project(share_me)
+
+
 INCLUDE_DIRECTORIES(${HEADER_OUTPUT_PATH})
 MESSAGE(STATUS "ppp ${HEADER_OUTPUT_PATH}")
 link_directories(${GTEST_ROOT})
 AUX_SOURCE_DIRECTORY(. SRC_LIST)
 
-ADD_LIBRARY(SSocket STATIC socket.cpp)
+IF(UNIX)
+    AUX_SOURCE_DIRECTORY(./linux SRC_LIST)
+ELSEIF(WIN32)
+    AUX_SOURCE_DIRECTORY(./win SRC_LIST)
+ENDIF(UNIX)
+
+
+ADD_LIBRARY(SSocket STATIC ${SRC_LIST})
 
 IF(${UNITTEST})
     # add_executable(main main.cpp)

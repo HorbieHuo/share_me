@@ -36,3 +36,4 @@ Makefile
 main
 .DS_Store
 external_dependencies
+build
