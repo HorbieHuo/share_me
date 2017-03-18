@@ -98,4 +98,11 @@ bool Socket::PostSendMsg(void* data, size_t length) {
     return true;
 }
 
+void Socket::OnRecvMsg(char* data, int length) {
+    if (!data) return;
+    if (length <= 0) return;
+    if (!m_dataHandleCallback) return;
+    m_dataHandleCallback(data, length);
+}
+
 }

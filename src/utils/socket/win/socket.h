@@ -23,6 +23,9 @@ class Socket: public ISocket {
 
         bool PostAcceptMsg();
         bool PostSendMsg(void* data, size_t length);
+        bool PostRecvMsg();
+
+        void OnRecvMsg(char* data, int length);
 
     private:
 
@@ -32,5 +35,6 @@ class Socket: public ISocket {
         struct sockaddr_in m_addr;
         // WSADATA m_ws;
         SOCKET_TYPE m_socketType;
+        DataHandleCallback m_dataHandleCallback;
 };
 }
