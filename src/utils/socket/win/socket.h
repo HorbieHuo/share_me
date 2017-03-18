@@ -11,6 +11,7 @@ class Socket: public ISocket {
     public:
         Socket();
         Socket(int port);
+        Socket(SOCKET_TYPE socketType);
         Socket(string ip, int port, SOCKET_TYPE socketType);
 
         void Set(SOCKET_TYPE socketType);
@@ -21,6 +22,7 @@ class Socket: public ISocket {
         bool SetDataHandleFunc(DataHandleCallback func);
 
         bool PostAcceptMsg();
+        bool PostSendMsg(void* data, size_t length);
 
     private:
 

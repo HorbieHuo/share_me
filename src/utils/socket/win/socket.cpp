@@ -11,6 +11,10 @@ Socket::Socket(int port) {
     m_socketType = SERVER;
 }
 
+Socket::Socket(SOCKET_TYPE socketType) {
+    m_socketType = socketType;
+}
+
 Socket::Socket(string ip, int port, SOCKET_TYPE socketType) {
     m_addr.sin_family = AF_INET;
     m_addr.sin_addr.s_addr = inet_addr(ip.c_str);
@@ -60,15 +64,38 @@ bool Socket::Start() {
 bool Socket::PostAcceptMsg() {
     if (m_socketType != SERVER) return false;
     LPPER_IO_DATA perIoData = new PER_IO_DATA;
-    memset(&(PerIoData->overlapped), sizeof(OVERLAPPED), 0);
+    memset(&(PerIoData->overlapped), 0, sizeof(OVERLAPPED));
     perIoData->databuff.len = DATA_BUF_SIZE;
     perIoData->databuff.buf = perIoData->buffer;
     perIoData->operationType = START_ACCEPT;
-    lpfnAcceptEx(Listen,perIoData->client,perIoData->dataBuffer,
-             perIoData->dataLength-((sizeof(SOCKADDR_IN)+16)*2),
-             sizeof(SOCKADDR_IN)+16,sizeof(SOCKADDR_IN)+16,&dwBytes,
-             &(perIoData->overlapped));
+    perIoData->socketForAccept = new Socket(Socket::ACCEPT);
+    perIoData->socketForAccept->init();
+    bool ret = lpfnAcceptEx(
+        m_socketHandle, perIoData->socketForAccept->GetHandle(), perIoData->dataBuffer,
+        perIoData->dataLength-((sizeof(SOCKADDR_IN)+16)*2),
+        sizeof(SOCKADDR_IN)+16,sizeof(SOCKADDR_IN)+16,&dwBytes,
+        &(perIoData->overlapped)
+    );
+    if(false == ret && ERROR_IO_PENDING != GetLastError()){
+        return false;
+    }
+    return true;
+}
 
+bool Socket::PostSendMsg(void* data, size_t length) {
+    if (m_socketType == SERVER) return false;
+    if (length >= DATA_BUF_SIZE) return false;
+    LPPER_IO_DATA perIoData = new PER_IO_DATA;
+    memset(&(PerIoData->overlapped), 0, sizeof(OVERLAPPED));
+    perIoData->databuff.len = DATA_BUF_SIZE;
+    perIoData->databuff.buf = perIoData->buffer;
+    memcpy(data, perIoData->buffer, length);
+    perIoData->operationType = SEND;
+    perIoData->socketForAccept = NULL;
+    if (WSASend(m_socketHandle, &(perIoData->databuf), 1, &SendBytes, 0, &(perIoData->overlapped), NULL) == SOCKET_ERROR) {
+        if (WSAGetLastError() != ERROR_IO_PENDING) return false;
+    }
+    return true;
 }
 
 }
