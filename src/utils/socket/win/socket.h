@@ -7,6 +7,7 @@
 namespace share_me_utils {
 
 typedef bool (*DataHandleCallback)(char* data, int length);
+
 class Socket: public ISocket {
     public:
         Socket();
@@ -30,11 +31,14 @@ class Socket: public ISocket {
     private:
 
         bool init();
+        bool getAcceptExFunc();
 
         SOCKET m_socketHandle;
         struct sockaddr_in m_addr;
         // WSADATA m_ws;
         SOCKET_TYPE m_socketType;
         DataHandleCallback m_dataHandleCallback;
+
+        static LPFN_ACCEPTEX m_acceptExFunc;
 };
 }

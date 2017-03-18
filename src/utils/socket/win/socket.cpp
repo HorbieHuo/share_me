@@ -29,11 +29,13 @@ void Socket::Set(SOCKET_TYPE socketType) {
 bool Socket::init() {
     if (m_socketType >= MAX_INVALID || m_socketType <= MIN_INVALID) return false;
     if (port <= 0) return false;
+
     WSADATA ws;
     if ( WSAStartup(MAKEWORD(2,2), &ws) != 0 ) {
         return false;
     }
     m_socketHandle = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
+    getAcceptExFunc();
     if (m_socketType == CLIENT) {
         if (connect(m_socketHandle, (SOCKADDR*)&m_addr, sizeof(m_addr)) != 0) {
             return false;
@@ -51,6 +53,20 @@ bool Socket::init() {
     return true;
 }
 
+bool Socket::getAcceptExFunc() {
+    if (!m_acceptExFunc) return true;
+    GUID guidAcceptEx = WSAID_ACCEPTEX;
+     //get acceptex function pointer
+     DWORD dwBytes = 0;
+     if(WSAIoctl(
+         m_socketHandle,SIO_GET_EXTENSION_FUNCTION_POINTER,
+         &guidAcceptEx,sizeof(guidAcceptEx),&m_acceptExFunc,sizeof(m_acceptExFunc),
+         &dwBytes,NULL,NULL)==0) {
+        return true;
+    }
+    return false;
+}
+
 bool Socket::Start() {
     if (!m_socketHandle) return false;
     IOLoop* io = IOLoop::Instance();
@@ -63,6 +79,7 @@ bool Socket::Start() {
 
 bool Socket::PostAcceptMsg() {
     if (m_socketType != SERVER) return false;
+    if (!m_acceptExFunc) return false;
     LPPER_IO_DATA perIoData = new PER_IO_DATA;
     memset(&(PerIoData->overlapped), 0, sizeof(OVERLAPPED));
     perIoData->databuff.len = DATA_BUF_SIZE;
@@ -70,7 +87,7 @@ bool Socket::PostAcceptMsg() {
     perIoData->operationType = START_ACCEPT;
     perIoData->socketForAccept = new Socket(Socket::ACCEPT);
     perIoData->socketForAccept->init();
-    bool ret = lpfnAcceptEx(
+    bool ret = m_acceptExFunc(
         m_socketHandle, perIoData->socketForAccept->GetHandle(), perIoData->dataBuffer,
         perIoData->dataLength-((sizeof(SOCKADDR_IN)+16)*2),
         sizeof(SOCKADDR_IN)+16,sizeof(SOCKADDR_IN)+16,&dwBytes,
