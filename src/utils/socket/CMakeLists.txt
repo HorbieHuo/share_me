@@ -1,7 +1,3 @@
-cmake_minimum_required(VERSION 3.6)
-project(share_me)
-
-
 INCLUDE_DIRECTORIES(${HEADER_OUTPUT_PATH})
 MESSAGE(STATUS "ppp ${HEADER_OUTPUT_PATH}")
 link_directories(${GTEST_ROOT})
