@@ -130,7 +130,27 @@ void Socket::OnRecvMsg(char* data, int length) {
     m_dataHandleCallback(data, length);
 }
 
-bool Socket::PostRecvMsg() {
+bool Socket::PostRecvMsg(LPPER_IO_DATA perIoData = NULL) {
+    if (!perIoData) {
+        perIoData = new LPPER_IO_DATA;
+    }
+    DWORD recvBytes = 0;
+    memset(&(perIoData->overlapped), 0, sizeof(OVERLAPPED));
+    perIoData->databuff.len = DATA_BUF_SIZE;
+    perIoData->databuff.buf = perIoData->buffer;
+    memcpy(data, perIoData->buffer, length);
+    perIoData->operationType = RECV;
+    perIoData->socketForAccept = NULL;
+    int ret = WSARecv(
+        m_socketHandle, 
+        &(perIoData->databuff), 1, 
+        &RecvBytes, &Flags, 
+        &(perIoData->overlapped), NULL);
+    if (ret != 0) {
+        if (ret != WSA_IO_PENDING) {
+            return false;
+        }
+    }
 	return true;
 }
 
