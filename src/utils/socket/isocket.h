@@ -9,6 +9,7 @@ namespace share_me_utils {
             MIN_INVALID,
             CLIENT,
             SERVER,
+            ACCEPT,
             MAX_INVALID
         };
 

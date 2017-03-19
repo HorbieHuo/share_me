@@ -11,11 +11,11 @@
 #include <arpa/inet.h>
 #endif
 
-using namespace FileTransfer;
+namespace FileTransfer{
 
-FileTransferServer* FileTransferServer::inst = NULL;
 
 FileTransferServer* FileTransferServer::Instanse() {
+	static FileTransferServer* inst = NULL;
     if ( inst == NULL ) {
         inst = new FileTransferServer();
     }
@@ -30,3 +30,5 @@ bool FileTransferServer::Config() {
 bool FileTransferServer::Start() {
     return true;
 }
+
+} //namespace FileTransfer
