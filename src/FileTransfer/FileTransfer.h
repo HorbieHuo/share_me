@@ -4,13 +4,14 @@
 #if defined(__unix__)
 #define EXPORT
 #elif defined(_WIN32)
-#define EXPORT _declspec(dllimport)
+//#define EXPORT _declspec(dllimport)
+#define EXPORT
 #endif
 
 #if defined(__unix__)
-#define SOXKET
+#define SOCKET
 #elif defined(_WIN32)
-#define SOXKET
+#define SOCKET
 #endif
 
 #include <list>
@@ -25,8 +26,6 @@ private:
 
     FileTransferServer(){};
     ~FileTransferServer(){};
-
-    static FileTransferServer* inst;
 
 public:
     static FileTransferServer* Instanse();

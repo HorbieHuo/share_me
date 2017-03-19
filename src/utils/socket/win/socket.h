@@ -1,8 +1,12 @@
+#ifndef SAHRE_ME_UTILS_SOCKET
+#define SAHRE_ME_UTILS_SOCKET
+
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <string>
 
 #include "../isocket.h"
+#include "ioloop.h"
 
 namespace share_me_utils {
 
@@ -13,10 +17,10 @@ class Socket: public ISocket {
         Socket();
         Socket(int port);
         Socket(SOCKET_TYPE socketType);
-        Socket(string ip, int port, SOCKET_TYPE socketType);
+        Socket(std::string ip, int port, SOCKET_TYPE socketType);
 
         void Set(SOCKET_TYPE socketType);
-        HANDLE GetHandle() { return m_socketHandle; }
+		SOCKET GetHandle() { return m_socketHandle; }
         SOCKET_TYPE GetSocketType() { return m_socketType; }
         bool Start();
 
@@ -35,10 +39,13 @@ class Socket: public ISocket {
 
         SOCKET m_socketHandle;
         struct sockaddr_in m_addr;
-        // WSADATA m_ws;
+        int m_port;
         SOCKET_TYPE m_socketType;
         DataHandleCallback m_dataHandleCallback;
 
         static LPFN_ACCEPTEX m_acceptExFunc;
 };
 }
+
+
+#endif // !SAHRE_ME_UTILS_SOCKET
