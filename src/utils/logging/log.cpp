@@ -13,24 +13,25 @@ bool Log::Set(const char* prefix) {
         if (s[i] == '%') {
             if (i >= 1 && s[i-1] == '\\') continue;
             if (s[i+1] == '\0') break;
-            s[i+1];
+            // TODO complete this log prefix
         }
     }
+    return true;
 }
 
-void Log::Trace() {
+void Log::Trace(const char *format, ...) {
+    snprintf();
+}
+void Log::Debug(const char *format, ...) {
     ;
 }
-void Log::Debug() {
+void Log::Info(const char *format, ...) {
     ;
 }
-void Log::Info() {
+void Log::Error(const char *format, ...) {
     ;
 }
-void Log::Error() {
-    ;
-}
-void Log::Fatal() {
+void Log::Fatal(const char *format, ...) {
     ;
 }
 
