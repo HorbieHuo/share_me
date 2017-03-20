@@ -3,9 +3,12 @@
 
 namespace share_me_utils {
 
+#define LOG_BUFFER_LENGTH 1024
+
 class Log {
     public:
         static Log* Instance();
+        bool Set(const char* prefix);
         
         void Trace();
         void Debug();
@@ -15,6 +18,10 @@ class Log {
 
     private:
         Log();
+
+        void formatString(const char *format, ...);
+
+        char* m_logBuffer[LOG_BUFFER_LENGTH];
 };
 
 } //namespace share_me_utils
