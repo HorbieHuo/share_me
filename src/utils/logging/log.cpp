@@ -19,8 +19,21 @@ bool Log::Set(const char* prefix) {
     return true;
 }
 
+void LogContent(
+    const char* date,
+    const char* time,
+    const char* filename,
+    const char* funcname,
+    const int lineno,
+    int level,
+    const char* format,
+    ...
+) {
+    ;
+}
+
 void Log::Trace(const char *format, ...) {
-    snprintf();
+    ;
 }
 void Log::Debug(const char *format, ...) {
     ;

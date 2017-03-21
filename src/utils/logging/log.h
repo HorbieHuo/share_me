@@ -7,6 +7,15 @@ namespace share_me_utils {
 
 class Log {
     public:
+        enum LEVEL {
+            TRACE,
+            DEBUG,
+            INFO,
+            ERROR,
+            FATAL,
+        };
+        
+    public:
         static Log* Instance();
         bool Set(const char* prefix);
         
@@ -15,6 +24,17 @@ class Log {
         void Info(const char *format, ...);
         void Error(const char *format, ...);
         void Fatal(const char *format, ...);
+
+        void LogContent(
+            const char* date,
+            const char* time,
+            const char* filename,
+            const char* funcname,
+            const int lineno,
+            int level,
+            const char* format,
+            ...
+        );
 
     private:
         Log();
