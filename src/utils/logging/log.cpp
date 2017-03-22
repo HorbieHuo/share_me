@@ -9,12 +9,18 @@ Log::Log() {
     m_prefixSymbols[eFile] = 'F';
     m_prefixSymbols[eFunc] = 'f';
     m_prefixSymbols[eLine] = 'l';
+
+    m_levelString[TRACE] = "TRACE";
+    m_levelString[DEBUG] = "DEBUG";
+    m_levelString[INFO] = "INFO";
+    m_levelString[ERROR] = "ERROR";
+    m_levelString[FATAL] = "FATAL";
 }
 
 bool Log::Set(const char* prefix) {
     if (!prefix) return false;
     if (*prefix == '\0') return false;
-    
+
     char* s = prefix;
     int switchOffset = 0;
     bool switchConfiged[eTop] = {false};
@@ -52,7 +58,51 @@ void LogContent(
     const char* format,
     ...
 ) {
-    ;
+    if (generatePrefix(date, time, filename, funcname, lineno, level)) {
+        ;
+    }
+}
+
+bool generatePrefix(
+    const char* date,
+    const char* time,
+    const char* filename,
+    const char* funcname,
+    const int lineno,
+    int level
+) {
+    memset(m_prefixBuffer, 0, LOG_BUFFER_LENGTH);
+    size_t offset = 0;
+    for (int i = eDate; i < eTop; ++i) {
+        if (m_prefixSwitchs == -1) break;
+        switch (m_prefixSwitchs[i]) {
+            case eDate: {
+                offset += sprintf(m_prefixBuffer + offset, "%s", date);
+                break;
+            }
+            case eTime: {
+                offset += sprintf(m_prefixBuffer + offset, "%s", time);
+                break;
+            }
+            case eFile: {
+                offset += sprintf(m_prefixBuffer + offset, "%s", filename);
+                break;
+            }
+            case eFunc: {
+                offset += sprintf(m_prefixBuffer + offset, "%s", funcname);
+                break;
+            }
+            case eLine: {
+                offset += sprintf(m_prefixBuffer + offset, "%d", lineno);
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+    }
+    offset += sprintf(m_prefixBuffer + offset, "%s", m_levelString[level]);
+    return (offset > 0 && offset < LOG_BUFFER_LENGTH);
 }
 
 void Log::Trace(const char *format, ...) {

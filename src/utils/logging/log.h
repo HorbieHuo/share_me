@@ -41,6 +41,14 @@ class Log {
         Log();
 
         void formatString(const char *format, ...);
+        bool generatePrefix(
+            const char* date,
+            const char* time,
+            const char* filename,
+            const char* funcname,
+            const int lineno,
+            int level
+        );
 
         char* m_logBuffer[2*LOG_BUFFER_LENGTH];
         char* m_prefixBuffer[LOG_BUFFER_LENGTH];
@@ -55,6 +63,7 @@ class Log {
         };
         char m_prefixSymbols[eTop];
         int m_prefixSwitchs[eTop];
+        char* m_levelString[INVALID];
 };
 
 } //namespace share_me_utils
