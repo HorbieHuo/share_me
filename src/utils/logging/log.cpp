@@ -2,18 +2,41 @@
 
 namespace share_me_utils {
 
-Log::Log() {}
+Log::Log() {
+    memset(m_prefixSwitchs, -1, sizeof(m_prefixSwitchs));
+    m_prefixSymbols[eDate] = 'd';
+    m_prefixSymbols[eTime] = 't';
+    m_prefixSymbols[eFile] = 'F';
+    m_prefixSymbols[eFunc] = 'f';
+    m_prefixSymbols[eLine] = 'l';
+}
 
 bool Log::Set(const char* prefix) {
     if (!prefix) return false;
     if (*prefix == '\0') return false;
+    
     char* s = prefix;
-    size_t i = 0;
-    while (s[i] != '\0' && s[i+1] != '\0') {
+    int switchOffset = 0;
+    bool switchConfiged[eTop] = {false};
+
+    for (int i = -1; s[i] != '\0'; ++i) {
         if (s[i] == '%') {
             if (i >= 1 && s[i-1] == '\\') continue;
             if (s[i+1] == '\0') break;
-            // TODO complete this log prefix
+            if (switchOffset >= eTop) break;
+            for (int j = eDate; j < eTop; ++j) {
+                if (m_prefixSymbols[j] == s[i+1]) {
+                    if (!switchConfiged[j]) {
+                        for (int k = eDate; k < eTop; ++k) {
+                            if (m_prefixSwitchs[k][0] == -1) {
+                                m_prefixSwitchs = j;
+                                break;
+                            }
+                        }
+                    }
+                    break;
+                }
+            }
         }
     }
     return true;

@@ -13,6 +13,7 @@ class Log {
             INFO,
             ERROR,
             FATAL,
+            INVALID,
         };
         
     public:
@@ -45,12 +46,15 @@ class Log {
         char* m_prefixBuffer[LOG_BUFFER_LENGTH];
 
         enum PREFIX_CELL_TYPE {
-            eDate = 0,
-            eDime,
-            eFile,
-            eFunc,
-            eLine,
+            eDate = 0, //%d
+            eTime,     //%t
+            eFile,     //%F
+            eFunc,     //%f
+            eLine,     //%l
+            eTop,
         };
+        char m_prefixSymbols[eTop];
+        int m_prefixSwitchs[eTop];
 };
 
 } //namespace share_me_utils
