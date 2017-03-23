@@ -49,8 +49,6 @@ bool Log::Set(const char* prefix) {
 }
 
 void LogContent(
-    const char* date,
-    const char* time,
     const char* filename,
     const char* funcname,
     const int lineno,
@@ -59,7 +57,7 @@ void LogContent(
     ...
 ) {
     int offset = 0;
-    offset = generatePrefix(date, time, filename, funcname, lineno, level)
+    offset = generatePrefix(filename, funcname, lineno, level)
     if (offset > 0) {
         m_prefixBuffer[offset] = '\0';
     } else offset = 0;
@@ -78,8 +76,6 @@ void LogContent(
 }
 
 int generatePrefix(
-    const char* date,
-    const char* time,
     const char* filename,
     const char* funcname,
     const int lineno,

@@ -27,8 +27,6 @@ class Log {
         void Fatal(const char *format, ...);
 
         void LogContent(
-            const char* date,
-            const char* time,
             const char* filename,
             const char* funcname,
             const int lineno,
@@ -42,8 +40,6 @@ class Log {
 
         void formatString(const char *format, ...);
         int generatePrefix(
-            const char* date,
-            const char* time,
             const char* filename,
             const char* funcname,
             const int lineno,
@@ -65,6 +61,12 @@ class Log {
         int m_prefixSwitchs[eTop];
         char* m_levelString[INVALID];
 };
+
+#define LOG_TRACE(formart, ...) (Log::Instance()->LogContent(__FILE__, __LINE__, __func__, Log::TRACE, formart, __VA_ARGS__))
+#define LOG_DEBUG(formart, ...) (Log::Instance()->LogContent(__FILE__, __LINE__, __func__, Log::DEBUG, formart, __VA_ARGS__))
+#define LOG_INFO(formart, ...)  (Log::Instance()->LogContent(__FILE__, __LINE__, __func__, Log::INFO,  formart, __VA_ARGS__))
+#define LOG_ERROR(formart, ...) (Log::Instance()->LogContent(__FILE__, __LINE__, __func__, Log::ERROR, formart, __VA_ARGS__))
+#define LOG_FATAL(formart, ...) (Log::Instance()->LogContent(__FILE__, __LINE__, __func__, Log::FATAL, formart, __VA_ARGS__))
 
 } //namespace share_me_utils
 
