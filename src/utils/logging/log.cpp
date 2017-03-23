@@ -17,7 +17,7 @@ Log::Log() {
     m_levelString[FATAL] = "FATAL";
 }
 
-bool Log::Set(const char* prefix) {
+bool Log::SetPrefix(const char* prefix) {
     if (!prefix) return false;
     if (*prefix == '\0') return false;
 
@@ -123,22 +123,6 @@ int generatePrefix(
     }
     offset += sprintf(m_prefixBuffer + offset, "%s", m_levelString[level]);
     return (offset > 0 && offset < LOG_BUFFER_LENGTH) ? offset : -1;
-}
-
-void Log::Trace(const char *format, ...) {
-    ;
-}
-void Log::Debug(const char *format, ...) {
-    ;
-}
-void Log::Info(const char *format, ...) {
-    ;
-}
-void Log::Error(const char *format, ...) {
-    ;
-}
-void Log::Fatal(const char *format, ...) {
-    ;
 }
 
 void formatString(const char *format, ...) {

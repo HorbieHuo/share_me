@@ -3,6 +3,9 @@
 
 namespace share_me_utils {
 
+#include <time.h>
+#include <stdio.h>
+
 #define LOG_BUFFER_LENGTH 1024
 
 class Log {
@@ -18,14 +21,8 @@ class Log {
         
     public:
         static Log* Instance();
-        bool Set(const char* prefix);
+        bool SetPrefix(const char* prefix);
         
-        void Trace(const char *format, ...);
-        void Debug(const char *format, ...);
-        void Info(const char *format, ...);
-        void Error(const char *format, ...);
-        void Fatal(const char *format, ...);
-
         void LogContent(
             const char* filename,
             const char* funcname,
