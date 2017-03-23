@@ -5,6 +5,14 @@ namespace share_me_utils {
 
 #include <time.h>
 #include <stdio.h>
+#include <string.h>
+#include <stdarg.h>
+
+#ifdef _WIN32
+#define localtime localtime_s
+#define sprintf sprintf_s
+#endif // _WIN32
+
 
 #define LOG_BUFFER_LENGTH 1024
 
@@ -43,8 +51,8 @@ class Log {
             int level
         );
 
-        char* m_logBuffer[2*LOG_BUFFER_LENGTH];
-        char* m_prefixBuffer[LOG_BUFFER_LENGTH];
+        char m_logBuffer[2*LOG_BUFFER_LENGTH];
+        char m_prefixBuffer[LOG_BUFFER_LENGTH];
 
         enum PREFIX_CELL_TYPE {
             eDate = 0, //%d

@@ -17,11 +17,17 @@ Log::Log() {
     m_levelString[FATAL] = "FATAL";
 }
 
+Log* Log::Instance() {
+	static Log* inst = NULL;
+	if (!inst) inst = new Log();
+	return inst;
+}
+
 bool Log::SetPrefix(const char* prefix) {
     if (!prefix) return false;
     if (*prefix == '\0') return false;
 
-    char* s = prefix;
+    const char* s = prefix;
     int switchOffset = 0;
     bool switchConfiged[eTop] = {false};
 
@@ -34,8 +40,8 @@ bool Log::SetPrefix(const char* prefix) {
                 if (m_prefixSymbols[j] == s[i+1]) {
                     if (!switchConfiged[j]) {
                         for (int k = eDate; k < eTop; ++k) {
-                            if (m_prefixSwitchs[k][0] == -1) {
-                                m_prefixSwitchs = j;
+                            if (m_prefixSwitchs[k] == -1) {
+                                m_prefixSwitchs[k] = j;
                                 break;
                             }
                         }
@@ -48,7 +54,7 @@ bool Log::SetPrefix(const char* prefix) {
     return true;
 }
 
-void LogContent(
+void Log::LogContent(
     const char* filename,
     const char* funcname,
     const int lineno,
@@ -57,7 +63,7 @@ void LogContent(
     ...
 ) {
     int offset = 0;
-    offset = generatePrefix(filename, funcname, lineno, level)
+	offset = generatePrefix(filename, funcname, lineno, level);
     if (offset > 0) {
         m_prefixBuffer[offset] = '\0';
     } else offset = 0;
@@ -75,7 +81,7 @@ void LogContent(
     fprintf(stdout, "%s", m_logBuffer);
 }
 
-int generatePrefix(
+int Log::generatePrefix(
     const char* filename,
     const char* funcname,
     const int lineno,
@@ -84,36 +90,36 @@ int generatePrefix(
     memset(m_prefixBuffer, 0, LOG_BUFFER_LENGTH);
     size_t offset = 0;
     for (int i = eDate; i < eTop; ++i) {
-        if (m_prefixSwitchs == -1) break;
+        if (m_prefixSwitchs[i] == -1) break;
         switch (m_prefixSwitchs[i]) {
             case eDate: {
                 time_t rawtime;
-                struct tm * timeinfo;
+                struct tm timeinfo;
                 time (&rawtime);
-                timeinfo = localtime (&rawtime);
-                offset += strftime (m_prefixBuffer + offset, LOG_BUFFER_LENGTH - offset, "%Y-%m-%d", timeinfo);
+                localtime (&timeinfo, &rawtime);
+                offset += strftime (m_prefixBuffer + offset, LOG_BUFFER_LENGTH - offset, "%Y-%m-%d", &timeinfo);
                 // offset += sprintf(m_prefixBuffer + offset, "%s", date);
                 break;
             }
             case eTime: {
                 time_t rawtime;
-                struct tm * timeinfo;
+                struct tm timeinfo;
                 time (&rawtime);
-                timeinfo = localtime (&rawtime);
-                offset += strftime (m_prefixBuffer + offset, LOG_BUFFER_LENGTH - offset, "%H:%M:%S", timeinfo);
+                localtime(&timeinfo, &rawtime);
+                offset += strftime (m_prefixBuffer + offset, LOG_BUFFER_LENGTH - offset, "%H:%M:%S", &timeinfo);
                 // offset += sprintf(m_prefixBuffer + offset, "%s", time);
                 break;
             }
             case eFile: {
-                offset += sprintf(m_prefixBuffer + offset, "%s", filename);
+                offset += snprintf(m_prefixBuffer + offset, 2*LOG_BUFFER_LENGTH - offset, "%s", filename);
                 break;
             }
             case eFunc: {
-                offset += sprintf(m_prefixBuffer + offset, "%s", funcname);
+                offset += snprintf(m_prefixBuffer + offset, 2 * LOG_BUFFER_LENGTH - offset, "%s", funcname);
                 break;
             }
             case eLine: {
-                offset += sprintf(m_prefixBuffer + offset, "%d", lineno);
+                offset += snprintf(m_prefixBuffer + offset, 2 * LOG_BUFFER_LENGTH - offset, "%d", lineno);
                 break;
             }
             default: {
@@ -121,16 +127,12 @@ int generatePrefix(
             }
         }
     }
-    offset += sprintf(m_prefixBuffer + offset, "%s", m_levelString[level]);
-    return (offset > 0 && offset < LOG_BUFFER_LENGTH) ? offset : -1;
+    offset += snprintf(m_prefixBuffer + offset, 2 * LOG_BUFFER_LENGTH - offset, "%s", m_levelString[level]);
+    return (offset > 0 && offset < LOG_BUFFER_LENGTH) ? (int)offset : -1;
 }
 
-void formatString(const char *format, ...) {
-    printf("%s %s ", __DATE__, __TIME__);  
-    va_list args;       //定义一个va_list类型的变量，用来储存单个参数  
-    va_start(args,cmd); //使args指向可变参数的第一个参数  
-    snprintf(m_logBuffer, LOG_BUFFER_LENGTH, cmd,args);  //必须用vprintf等带V的  
-    va_end(args);
+void Log::formatString(const char *format, ...) {
+	;
 }
 
 } //namespace share_me_utils
