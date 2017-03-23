@@ -58,12 +58,18 @@ void LogContent(
     const char* format,
     ...
 ) {
-    if (generatePrefix(date, time, filename, funcname, lineno, level)) {
-        ;
-    }
+    int offset = 0;
+    offset = generatePrefix(date, time, filename, funcname, lineno, level)
+    if (offset > 0) {
+        memcpy(m_logBuffer, m_prefixBuffer, offset);
+    } else offset = 0;
+    va_list args;       //定义一个va_list类型的变量，用来储存单个参数  
+    va_start(args,format); //使args指向可变参数的第一个参数  
+    snprintf(m_logBuffer+offset, 2*LOG_BUFFER_LENGTH-offset, format,args);  //必须用vprintf等带V的  
+    va_end(args);
 }
 
-bool generatePrefix(
+int generatePrefix(
     const char* date,
     const char* time,
     const char* filename,
@@ -102,7 +108,7 @@ bool generatePrefix(
         }
     }
     offset += sprintf(m_prefixBuffer + offset, "%s", m_levelString[level]);
-    return (offset > 0 && offset < LOG_BUFFER_LENGTH);
+    return (offset > 0 && offset < LOG_BUFFER_LENGTH) ? offset : -1;
 }
 
 void Log::Trace(const char *format, ...) {

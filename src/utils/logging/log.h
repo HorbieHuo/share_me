@@ -41,7 +41,7 @@ class Log {
         Log();
 
         void formatString(const char *format, ...);
-        bool generatePrefix(
+        int generatePrefix(
             const char* date,
             const char* time,
             const char* filename,
