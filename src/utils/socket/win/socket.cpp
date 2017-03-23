@@ -17,7 +17,8 @@ Socket::Socket(SOCKET_TYPE socketType) {
 
 Socket::Socket(std::string ip, int port, SOCKET_TYPE socketType) {
     m_addr.sin_family = AF_INET;
-    m_addr.sin_addr.s_addr = inet_addr(ip.c_str());
+	inet_pton(AF_INET, ip.c_str(), &(m_addr.sin_addr.s_addr));
+    //m_addr.sin_addr.s_addr = inet_addr(ip.c_str());
     m_addr.sin_port = htons(port);
     m_socketType = socketType;
 }
@@ -94,13 +95,13 @@ bool Socket::PostAcceptMsg() {
     perIoData->operationType = START_ACCEPT;
     perIoData->socketForAccept = new Socket(ACCEPT);
     perIoData->socketForAccept->init();
-    bool ret = m_acceptExFunc(
+    BOOL ret = m_acceptExFunc(
         m_socketHandle, perIoData->socketForAccept->GetHandle(), perIoData->buffer,
         perIoData->bufferLen-((sizeof(SOCKADDR_IN)+16)*2),
         sizeof(SOCKADDR_IN)+16,sizeof(SOCKADDR_IN)+16,&dwBytes,
         &(perIoData->overlapped)
     );
-    if(false == ret && ERROR_IO_PENDING != GetLastError()){
+    if(FALSE == ret && ERROR_IO_PENDING != GetLastError()){
         return false;
     }
     return true;
@@ -109,7 +110,7 @@ bool Socket::PostAcceptMsg() {
 bool Socket::PostSendMsg(void* data, size_t length) {
     if (m_socketType == SERVER) return false;
     if (length >= DATA_BUF_SIZE) return false;
-	DWORD sendBytes = length;
+	DWORD sendBytes = (DWORD)length;
     LPPER_IO_DATA perIoData = new PER_IO_DATA;
     memset(&(perIoData->overlapped), 0, sizeof(OVERLAPPED));
     perIoData->databuff.len = DATA_BUF_SIZE;
@@ -130,21 +131,23 @@ void Socket::OnRecvMsg(char* data, int length) {
     m_dataHandleCallback(data, length);
 }
 
-bool Socket::PostRecvMsg(LPPER_IO_DATA perIoData = NULL) {
+bool Socket::PostRecvMsg(void* data) {
+	LPPER_IO_DATA perIoData = (LPPER_IO_DATA)data;
     if (!perIoData) {
-        perIoData = new LPPER_IO_DATA;
+        perIoData = new PER_IO_DATA;
     }
     DWORD recvBytes = 0;
+	DWORD flags = 0;
     memset(&(perIoData->overlapped), 0, sizeof(OVERLAPPED));
     perIoData->databuff.len = DATA_BUF_SIZE;
     perIoData->databuff.buf = perIoData->buffer;
-    memcpy(data, perIoData->buffer, length);
+    //memcpy(data, perIoData->buffer, length);
     perIoData->operationType = RECV;
     perIoData->socketForAccept = NULL;
     int ret = WSARecv(
         m_socketHandle, 
         &(perIoData->databuff), 1, 
-        &RecvBytes, &Flags, 
+        &recvBytes, &flags,
         &(perIoData->overlapped), NULL);
     if (ret != 0) {
         if (ret != WSA_IO_PENDING) {
