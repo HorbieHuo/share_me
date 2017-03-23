@@ -61,12 +61,20 @@ void LogContent(
     int offset = 0;
     offset = generatePrefix(date, time, filename, funcname, lineno, level)
     if (offset > 0) {
-        memcpy(m_logBuffer, m_prefixBuffer, offset);
+        m_prefixBuffer[offset] = '\0';
     } else offset = 0;
     va_list args;       //定义一个va_list类型的变量，用来储存单个参数  
     va_start(args,format); //使args指向可变参数的第一个参数  
-    snprintf(m_logBuffer+offset, 2*LOG_BUFFER_LENGTH-offset, format,args);  //必须用vprintf等带V的  
+    offset = snprintf(m_logBuffer, 2*LOG_BUFFER_LENGTH, format,args);  //必须用vprintf等带V的  
     va_end(args);
+    if (offset > 0) {
+        offset = offset >= 2*LOG_BUFFER_LENGTH-2 ? (2*LOG_BUFFER_LENGTH-2) : offset;
+    } else {
+        offset = 0;
+    }
+    m_logBuffer[offset] = '\n';
+    m_logBuffer[offset+1] = '\0';
+    fprintf(stdout, "%s", m_logBuffer);
 }
 
 int generatePrefix(
