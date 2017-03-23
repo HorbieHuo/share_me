@@ -28,7 +28,7 @@ class Socket: public ISocket {
 
         bool PostAcceptMsg();
         bool PostSendMsg(void* data, size_t length);
-        bool PostRecvMsg();
+        bool PostRecvMsg(LPPER_IO_DATA perIoData = NULL);
 
         void OnRecvMsg(char* data, int length);
 
