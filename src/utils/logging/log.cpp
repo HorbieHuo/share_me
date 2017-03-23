@@ -87,11 +87,21 @@ int generatePrefix(
         if (m_prefixSwitchs == -1) break;
         switch (m_prefixSwitchs[i]) {
             case eDate: {
-                offset += sprintf(m_prefixBuffer + offset, "%s", date);
+                time_t rawtime;
+                struct tm * timeinfo;
+                time (&rawtime);
+                timeinfo = localtime (&rawtime);
+                offset += strftime (m_prefixBuffer + offset, LOG_BUFFER_LENGTH - offset, "%Y-%m-%d", timeinfo);
+                // offset += sprintf(m_prefixBuffer + offset, "%s", date);
                 break;
             }
             case eTime: {
-                offset += sprintf(m_prefixBuffer + offset, "%s", time);
+                time_t rawtime;
+                struct tm * timeinfo;
+                time (&rawtime);
+                timeinfo = localtime (&rawtime);
+                offset += strftime (m_prefixBuffer + offset, LOG_BUFFER_LENGTH - offset, "%H:%M:%S", timeinfo);
+                // offset += sprintf(m_prefixBuffer + offset, "%s", time);
                 break;
             }
             case eFile: {
