@@ -1,0 +1,4 @@
+
+add_executable(socket_unittest socket_unittest.cpp)
+
+TARGET_LINK_LIBRARIES(socket_unittest SSocket)
