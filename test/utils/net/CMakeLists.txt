@@ -1,4 +1,5 @@
+INCLUDE_DIRECTORIES(${GTEST_ROOT}/include)
 
-add_executable(socket_unittest socket_unittest.cpp)
+add_executable(socket_test socket_test.cpp)
 
-TARGET_LINK_LIBRARIES(socket_unittest SSocket)
+TARGET_LINK_LIBRARIES(socket_test SSocket gtest)
