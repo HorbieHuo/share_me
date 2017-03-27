@@ -1,4 +1,3 @@
-INCLUDE_DIRECTORIES(${GTEST_ROOT}/include)
 
 add_executable(socket_test socket_test.cpp)
 

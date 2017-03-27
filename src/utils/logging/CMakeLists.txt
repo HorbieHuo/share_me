@@ -9,9 +9,9 @@ AUX_SOURCE_DIRECTORY(. SRC_LIST)
 
 ADD_LIBRARY(SLog STATIC ${SRC_LIST})
 
-IF(${UNITTEST})
+# IF(${UNITTEST})
     # add_executable(main main.cpp)
-    ADD_EXECUTABLE(log_unittest log_unittest.cpp)
-    TARGET_LINK_LIBRARIES(log_unittest SLog gtest gtest_main)
+    # ADD_EXECUTABLE(log_unittest log_unittest.cpp)
+    # TARGET_LINK_LIBRARIES(log_unittest SLog gtest gtest_main)
     # TARGET_LINK_LIBRARIES(socket_unittest gtest gtest_main)
-ENDIF()
+# ENDIF()
