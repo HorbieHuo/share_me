@@ -10,8 +10,6 @@
 
 namespace share_me_utils {
 
-typedef bool (*DataHandleCallback)(char* data, int length);
-
 class Socket: public ISocket {
     public:
         Socket();
