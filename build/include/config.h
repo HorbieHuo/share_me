@@ -1,1 +1,1 @@
-/* #undef UNITTEST */
+#define UNITTEST

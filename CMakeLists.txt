@@ -1,0 +1,49 @@
+cmake_minimum_required(VERSION 3.6)
+project(share_me)
+
+OPTION(UNITTEST "unittest, using googletest, default OFF" OFF)
+OPTION(DEBUG "unittest, using googletest, default OFF" OFF)
+
+IF(UNIX)
+    ADD_DEFINITIONS(-D__unix__)
+ELSEIF(WIN32)
+    ADD_DEFINITIONS(-D_WIN32)
+    set(CMAKE_C_FLAGS_DEBUG "/D_DEBUG /MTd")
+    set(CMAKE_CXX_FLAGS_DEBUG "/D_DEBUG /MTd")
+ENDIF(UNIX)
+
+SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
+SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
+
+SET(HEADER_OUTPUT_PATH ${PROJECT_BINARY_DIR}/include)
+
+CONFIGURE_FILE (
+    "${PROJECT_SOURCE_DIR}/src/config.h.in"
+    "${HEADER_OUTPUT_PATH}/config.h"
+)
+
+# ADD_SUBDIRECTORY(${PROJECT_SOURCE_DIR}/FileTransfer)
+# ADD_SUBDIRECTORY(${PROJECT_SOURCE_DIR}/utils)
+ADD_SUBDIRECTORY(${PROJECT_SOURCE_DIR}/src)
+
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/src/FileTransfer)
+INCLUDE_DIRECTORIES(${HEADER_OUTPUT_PATH})
+
+IF(${UNITTEST})
+    IF(NOT GTEST_ROOT)
+        SET(GTEST_ROOT ${PROJECT_SOURCE_DIR}/external_dependencies/gtest)
+    ENDIF()
+    INCLUDE_DIRECTORIES(${GTEST_ROOT}/include)
+    LINK_DIRECTORIES(${GTEST_ROOT}/libs)
+    MESSAGE(STATUS "GTEST is ON")
+    MESSAGE(STATUS "GTEST Header ${GTEST_ROOT}")
+    # ENABLE_TESTING()
+    # ADD_TEST(NAME socket_unittest COMMAND socket_unittest)
+    ADD_SUBDIRECTORY(${PROJECT_SOURCE_DIR}/test)
+ELSE()
+    MESSAGE(STATUS "GTEST is OFF")
+ENDIF()
+
+# add_executable(main main.cpp)
+
+# TARGET_LINK_LIBRARIES(main FileTransfer)
