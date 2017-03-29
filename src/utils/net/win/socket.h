@@ -12,23 +12,23 @@ namespace share_me_utils {
 
 class Socket: public ISocket {
     public:
-        Socket();
-        Socket(int port);
-        Socket(SOCKET_TYPE socketType);
-        Socket(std::string ip, int port, SOCKET_TYPE socketType);
+        explicit Socket();
+        explicit Socket(int port);
+        explicit Socket(SOCKET_TYPE socketType);
+        explicit Socket(std::string ip, int port, SOCKET_TYPE socketType);
 
         void Set(SOCKET_TYPE socketType);
 		SOCKET GetHandle() { return m_socketHandle; }
         SOCKET_TYPE GetSocketType() { return m_socketType; }
-        bool Start();
+        virtual bool Start();
 
-        bool SetDataHandleFunc(DataHandleCallback func);
+        virtual bool SetDataHandleFunc(DataHandleCallback func);
 
-        bool PostAcceptMsg();
-        bool PostSendMsg(void* data, size_t length);
-        bool PostRecvMsg(void* data);
+        virtual bool PostAcceptMsg();
+        virtual bool PostSendMsg(void* data, size_t length);
+        virtual bool PostRecvMsg(void* data);
 
-        void OnRecvMsg(char* data, int length);
+        virtual void OnRecvMsg(char* data, int length);
 
     private:
 
