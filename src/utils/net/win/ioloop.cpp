@@ -47,7 +47,16 @@ bool IOLoop::Init() {
   return true;
 }
 
-void IOLoop::Release() {}
+void IOLoop::Release() {
+  LPPER_IO_DATA perIoData = new PER_IO_DATA;
+  memset(&(perIoData->overlapped), sizeof(OVERLAPPED), 0);
+  perIoData->databuff.len = DATA_BUF_SIZE;
+  perIoData->databuff.buf = perIoData->buffer;
+  perIoData->operationType = END_THREAD;
+  PostQueuedCompletionStatus(m_completionPort, (DWORD)sizeof(int),
+                             (ULONG_PTR)NULL, (LPOVERLAPPED)perIoData);
+  return true;
+}
 
 DWORD _stdcall ServerWorkThread(LPVOID CompletionPortID) {
   HANDLE complationPort = (HANDLE)CompletionPortID;
@@ -67,7 +76,7 @@ DWORD _stdcall ServerWorkThread(LPVOID CompletionPortID) {
       return 0;
     }
 
-    // 检查本次是否有数据接收,如没有，是为程序结束信号，则结束本线程
+    // 检查本次是否有数据接收,如没有，是为socket结束信号
     if (bytesTransferred == 0) {
       // std::cout<< " Start closing socket..."<< std::endl;
       if (CloseHandle((HANDLE)socket->GetHandle()) == SOCKET_ERROR) {

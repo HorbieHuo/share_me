@@ -36,6 +36,10 @@ protected:
 
 TEST_F(SocketUnittest, OneEqual) { EXPECT_EQ(1, 1); }
 TEST_F(SocketUnittest, IO_is_NULL) { EXPECT_EQ(NULL, m_io); }
+TEST_F(SocketUnittest, io_instanse) {
+  m_io = IOLoop::Instanse();
+  ASSERT_NE(NULL, m_io);
+}
 
 int main(int argc, char *argv[]) {
   testing::InitGoogleTest(&argc, argv);

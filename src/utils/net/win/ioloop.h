@@ -16,6 +16,7 @@ class Socket;
 #define RECV ((unsigned long)1 << 1)
 #define ACCEPT ((unsigned long)1 << 2)
 #define START_ACCEPT ((unsigned long)1 << 3)
+#define END_THREAD ((unsigned long)1 << 4)
 
 /**
 * 结构体名称：PER_IO_DATA
