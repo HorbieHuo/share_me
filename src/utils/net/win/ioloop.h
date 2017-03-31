@@ -31,10 +31,10 @@ typedef struct {
   Socket *socketForAccept;
 } PER_IO_OPERATEION_DATA, *LPPER_IO_OPERATION_DATA, *LPPER_IO_DATA, PER_IO_DATA;
 
-const int DefaultPort = 9999;
+// #define DefaultPort  9999
 // vector<Socket* > clientGroup;        // 记录客户端的向量组
-int g_nThread = 0;  //开启线程数量
-HANDLE hThread[50]; //线程句柄
+// int g_nThread = 0;  //开启线程数量
+// HANDLE hThread[50]; //线程句柄
 
 class IOLoop {
 private:
@@ -49,6 +49,7 @@ public:
   static IOLoop *Instanse();
 
   bool Init();
+  void Release();
 
   bool AddServerSocket(Socket *socket);
   bool AddClientSocket(Socket *socket);

@@ -1,6 +1,8 @@
-#include "gtest/gtest.h"
-#include "socket.h"
 #include "ioloop.h"
+#include "socket.h"
+#include "gtest/gtest.h"
+
+using namespace share_me_utils;
 
 TEST(FooTest, HandleNoneZeroInput) {
   EXPECT_EQ(2, 2);
@@ -9,8 +11,8 @@ TEST(FooTest, HandleNoneZeroInput) {
 
 #define SOCKET_CONTINER_CAPACITY 10
 
-class SocketUnittest: public testing::Test {
-  protected:
+class SocketUnittest : public testing::Test {
+protected:
   virtual void SetUp() {
     m_io = NULL;
     memset(m_sockets, 0, sizeof(m_sockets));
@@ -26,9 +28,11 @@ class SocketUnittest: public testing::Test {
     }
   }
 
-  IOLoop* m_io;
-  Socket* m_sockets[SOCKET_CONTINER_CAPACITY];
+  IOLoop *m_io;
+  Socket *m_sockets[SOCKET_CONTINER_CAPACITY];
 };
+
+TEST_F(SocketUnittest, OneEqual) { EXPECT_EQ(1, 1); }
 
 int main(int argc, char *argv[]) {
   testing::InitGoogleTest(&argc, argv);
