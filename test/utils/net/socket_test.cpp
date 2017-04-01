@@ -21,8 +21,10 @@ protected:
   }
   virtual void TearDown() {
     std::cout << "SocketUnittest TearDown ..." << std::endl;
-    m_io->Release();
-    m_io = nullptr;
+    if (m_io) {
+      m_io->Release();
+      m_io = nullptr;
+    }
     for (int i = 0; i < SOCKET_CONTINER_CAPACITY; ++i) {
       if (m_sockets[i]) {
         delete m_sockets[i];

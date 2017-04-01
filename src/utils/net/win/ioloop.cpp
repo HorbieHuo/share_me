@@ -53,7 +53,7 @@ bool IOLoop::Init() {
 
 void IOLoop::Release() {
   long livedThreadCount = GetThreadLivedCount();
-  for (int i = 0; i < livedThreadCount; ++i) {
+  for (long i = 0; i < livedThreadCount; ++i) {
     LPPER_IO_DATA perIoData = new PER_IO_DATA;
     memset(&(perIoData->overlapped), sizeof(OVERLAPPED), 0);
     perIoData->databuff.len = DATA_BUF_SIZE;
