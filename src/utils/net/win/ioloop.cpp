@@ -4,25 +4,28 @@ namespace share_me_utils {
 
 DWORD _stdcall ServerWorkThread(LPVOID CompletionPortID);
 
+IOLoop *IOLoop::m_io = nullptr;
+
 IOLoop *IOLoop::Instanse() {
-  static IOLoop *inst = NULL;
-  if (!inst) {
-    inst = new IOLoop();
+  if (!m_io) {
+    m_io = new IOLoop();
   }
-  return inst;
+  return m_io;
 }
 
 IOLoop::IOLoop() {
-  m_threadCount = 2;
-  m_thread = new HANDLE[m_threadCount];
+  m_threadLivedCount = 0;
+  memset(m_thread, 0, sizeof(m_thread));
 }
 
-IOLoop::~IOLoop() {
-  if (m_thread) {
-    delete[] m_thread;
-    m_thread = NULL;
-  }
+IOLoop::~IOLoop() {}
+
+void IOLoop::OnThreadClose() {
+  if (m_threadLivedCount > 0)
+    InterlockedExchangeAdd(&m_threadLivedCount, -1);
 }
+
+long IOLoop::GetThreadLivedCount() { return m_threadLivedCount; }
 
 bool IOLoop::Init() {
   m_completionPort = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
@@ -33,7 +36,7 @@ bool IOLoop::Init() {
   // GetSystemInfo(&mySysInfo );
   DWORD threadID;
 
-  for (int i = 0; i < m_threadCount; ++i) {
+  for (int i = 0; i < MAX_THREAD_COUNT; ++i) {
     HANDLE threadHandle;
     // PTHREAD_START_ROUTINE
     threadHandle =
@@ -42,20 +45,28 @@ bool IOLoop::Init() {
       // std::cout<< "CreateThread failed. Error:"<< GetLastError()<< std::endl;
       return false;
     }
-    m_thread[i] = threadHandle;
+    ++m_threadLivedCount;
+    CloseHandle(threadHandle);
   }
   return true;
 }
 
 void IOLoop::Release() {
-  LPPER_IO_DATA perIoData = new PER_IO_DATA;
-  memset(&(perIoData->overlapped), sizeof(OVERLAPPED), 0);
-  perIoData->databuff.len = DATA_BUF_SIZE;
-  perIoData->databuff.buf = perIoData->buffer;
-  perIoData->operationType = END_THREAD;
-  PostQueuedCompletionStatus(m_completionPort, (DWORD)sizeof(int),
-                             (ULONG_PTR)NULL, (LPOVERLAPPED)perIoData);
-  return true;
+  long livedThreadCount = GetThreadLivedCount();
+  for (int i = 0; i < livedThreadCount; ++i) {
+    LPPER_IO_DATA perIoData = new PER_IO_DATA;
+    memset(&(perIoData->overlapped), sizeof(OVERLAPPED), 0);
+    perIoData->databuff.len = DATA_BUF_SIZE;
+    perIoData->databuff.buf = perIoData->buffer;
+    perIoData->operationType = END_THREAD;
+    PostQueuedCompletionStatus(m_completionPort, (DWORD)sizeof(int),
+                               (ULONG_PTR)NULL, (LPOVERLAPPED)perIoData);
+  }
+  while (GetThreadLivedCount())
+    Sleep(10);
+  if (m_io)
+    delete m_io;
+  m_io = NULL;
 }
 
 DWORD _stdcall ServerWorkThread(LPVOID CompletionPortID) {
@@ -76,9 +87,14 @@ DWORD _stdcall ServerWorkThread(LPVOID CompletionPortID) {
       return 0;
     }
 
+    if (socket == NULL && pIoData->operationType == END_THREAD)
+      break;
+
     // 检查本次是否有数据接收,如没有，是为socket结束信号
     if (bytesTransferred == 0) {
       // std::cout<< " Start closing socket..."<< std::endl;
+      if (socket == NULL)
+        continue;
       if (CloseHandle((HANDLE)socket->GetHandle()) == SOCKET_ERROR) {
         // std::cout<< "Close socket failed. Error:"<< GetLastError()<<
         // std::endl;
@@ -114,6 +130,9 @@ DWORD _stdcall ServerWorkThread(LPVOID CompletionPortID) {
     //     }
     // }
   }
+  IOLoop *io = IOLoop::Instanse();
+  if (io)
+    io->OnThreadClose();
   return 0;
 }
 

@@ -18,6 +18,8 @@ class Socket;
 #define START_ACCEPT ((unsigned long)1 << 3)
 #define END_THREAD ((unsigned long)1 << 4)
 
+#define MAX_THREAD_COUNT 2
+
 /**
 * 结构体名称：PER_IO_DATA
 * 结构体功能：重叠I/O需要用到的结构体，临时记录IO数据
@@ -42,12 +44,16 @@ private:
   IOLoop();
   ~IOLoop();
 
-  int m_threadCount;
-  HANDLE *m_thread;
+  HANDLE m_thread[MAX_THREAD_COUNT];
   HANDLE m_completionPort;
+  long m_threadLivedCount;
+  static IOLoop* m_io;
 
 public:
   static IOLoop *Instanse();
+  
+  void OnThreadClose();
+  long GetThreadLivedCount();
 
   bool Init();
   void Release();

@@ -22,10 +22,11 @@ protected:
   virtual void TearDown() {
     std::cout << "SocketUnittest TearDown ..." << std::endl;
     m_io->Release();
+    m_io = nullptr;
     for (int i = 0; i < SOCKET_CONTINER_CAPACITY; ++i) {
       if (m_sockets[i]) {
         delete m_sockets[i];
-        m_sockets[i] = NULL;
+        m_sockets[i] = nullptr;
       }
     }
   }
@@ -35,10 +36,10 @@ protected:
 };
 
 TEST_F(SocketUnittest, OneEqual) { EXPECT_EQ(1, 1); }
-TEST_F(SocketUnittest, IO_is_NULL) { EXPECT_EQ(NULL, m_io); }
+TEST_F(SocketUnittest, IO_is_nullptr) { EXPECT_EQ(nullptr, m_io); }
 TEST_F(SocketUnittest, io_instanse) {
   m_io = IOLoop::Instanse();
-  ASSERT_NE(NULL, m_io);
+  ASSERT_NE(nullptr, m_io);
 }
 
 int main(int argc, char *argv[]) {
