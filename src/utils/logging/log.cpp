@@ -1,4 +1,5 @@
 #include "log.h"
+#include <iostream>
 
 namespace share_me_utils {
 
@@ -31,17 +32,12 @@ bool Log::SetPrefix(const char *prefix) {
     return false;
 
   const char *s = prefix;
-  int switchOffset = 0;
   bool switchConfiged[eTop] = {false};
 
-  for (int i = -1; s[i] != '\0'; ++i) {
+  for (int i = 0; s[i] != '\0'; ++i) {
     if (s[i] == '%') {
       if (i >= 1 && s[i - 1] == '\\')
         continue;
-      if (s[i + 1] == '\0')
-        break;
-      if (switchOffset >= eTop)
-        break;
       for (int j = eDate; j < eTop; ++j) {
         if (m_prefixSymbols[j] == s[i + 1]) {
           if (!switchConfiged[j]) {
@@ -60,22 +56,25 @@ bool Log::SetPrefix(const char *prefix) {
   return true;
 }
 
-void Log::LogContent(const char *filename, const char *funcname,
-                     const int lineno, int level, const char *format, ...) {
+void Log::LogContent(const char *filename, const int lineno,
+                     const char *funcname, int level, const char *format, ...) {
   int offset = 0;
-  offset = generatePrefix(filename, funcname, lineno, level);
-  if (offset > 0) {
-    m_prefixBuffer[offset] = '\0';
+  int prefixLen = 0;
+  prefixLen = generatePrefix(filename, funcname, lineno, level);
+  if (prefixLen > 0) {
+    // m_prefixBuffer[offset] = '\0';
+    memcpy(m_logBuffer, m_prefixBuffer, prefixLen);
   } else
-    offset = 0;
+    prefixLen = 0;
   va_list args; //定义一个va_list类型的变量，用来储存单个参数
   va_start(args, format); //使args指向可变参数的第一个参数
-  offset = snprintf(m_logBuffer, 2 * LOG_BUFFER_LENGTH, format,
-                    args); //必须用vprintf等带V的
+  offset = snprintf(m_logBuffer + prefixLen, 2 * LOG_BUFFER_LENGTH - prefixLen,
+                    format, args); //必须用vprintf等带V的
   va_end(args);
   if (offset > 0) {
-    offset = offset >= 2 * LOG_BUFFER_LENGTH - 2 ? (2 * LOG_BUFFER_LENGTH - 2)
-                                                 : offset;
+    offset = offset + prefixLen >= 2 * LOG_BUFFER_LENGTH - 2
+                 ? (2 * LOG_BUFFER_LENGTH - 2)
+                 : offset + prefixLen;
   } else {
     offset = 0;
   }
@@ -98,7 +97,7 @@ int Log::generatePrefix(const char *filename, const char *funcname,
       time(&rawtime);
       localtime(&timeinfo, &rawtime);
       offset += strftime(m_prefixBuffer + offset, LOG_BUFFER_LENGTH - offset,
-                         "%Y-%m-%d", &timeinfo);
+                         "[%Y-%m-%d]", &timeinfo);
       // offset += sprintf(m_prefixBuffer + offset, "%s", date);
       break;
     }
@@ -108,30 +107,30 @@ int Log::generatePrefix(const char *filename, const char *funcname,
       time(&rawtime);
       localtime(&timeinfo, &rawtime);
       offset += strftime(m_prefixBuffer + offset, LOG_BUFFER_LENGTH - offset,
-                         "%H:%M:%S", &timeinfo);
+                         "[%H:%M:%S]", &timeinfo);
       // offset += sprintf(m_prefixBuffer + offset, "%s", time);
       break;
     }
     case eFile: {
       offset += snprintf(m_prefixBuffer + offset,
-                         2 * LOG_BUFFER_LENGTH - offset, "%s", filename);
+                         2 * LOG_BUFFER_LENGTH - offset, "[%s]", filename);
       break;
     }
     case eFunc: {
       offset += snprintf(m_prefixBuffer + offset,
-                         2 * LOG_BUFFER_LENGTH - offset, "%s", funcname);
+                         2 * LOG_BUFFER_LENGTH - offset, "[%s]", funcname);
       break;
     }
     case eLine: {
       offset += snprintf(m_prefixBuffer + offset,
-                         2 * LOG_BUFFER_LENGTH - offset, "%d", lineno);
+                         2 * LOG_BUFFER_LENGTH - offset, "[%d]", lineno);
       break;
     }
     default: { break; }
     }
   }
   offset += snprintf(m_prefixBuffer + offset, 2 * LOG_BUFFER_LENGTH - offset,
-                     "%s", m_levelString[level]);
+                     "[%s]", m_levelString[level]);
   return (offset > 0 && offset < LOG_BUFFER_LENGTH) ? (int)offset : -1;
 }
 

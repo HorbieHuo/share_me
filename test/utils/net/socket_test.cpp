@@ -44,6 +44,12 @@ TEST_F(SocketUnittest, io_instanse) {
   ASSERT_NE(nullptr, m_io);
 }
 
+TEST_F(SocketUnittest, socket_send_and_recieve) {
+  m_io = IOLoop::Instanse();
+  ASSERT_NE(nullptr, m_io);
+  ASSERT_TRUE(m_io->Init());
+}
+
 int main(int argc, char *argv[]) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

@@ -1,13 +1,12 @@
 #ifndef SHARE_ME_LOG_LOG_H
 #define SHARE_ME_LOG_LOG_H
 
-namespace share_me_utils {
-
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
 
+namespace share_me_utils {
 
 #ifdef _WIN32
 #define localtime localtime_s
@@ -19,7 +18,7 @@ namespace share_me_utils {
 class Log {
 public:
   enum LEVEL {
-    TRACE,
+    TRACE = 0,
     DEBUG,
     INFO,
     ERROR,
@@ -31,7 +30,7 @@ public:
   static Log *Instance();
   bool SetPrefix(const char *prefix);
 
-  void LogContent(const char *filename, const char *funcname, const int lineno,
+  void LogContent(const char *filename, const int lineno, const char *funcname,
                   int level, const char *format, ...);
 
 private:
