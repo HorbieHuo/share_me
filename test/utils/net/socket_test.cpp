@@ -38,13 +38,9 @@ protected:
 };
 
 TEST_F(SocketUnittest, OneEqual) { EXPECT_EQ(1, 1); }
-TEST_F(SocketUnittest, IO_is_nullptr) { EXPECT_EQ(nullptr, m_io); }
-TEST_F(SocketUnittest, io_instanse) {
-  m_io = IOLoop::Instanse();
-  ASSERT_NE(nullptr, m_io);
-}
 
 TEST_F(SocketUnittest, socket_send_and_recieve) {
+  EXPECT_EQ(nullptr, m_io);
   m_io = IOLoop::Instanse();
   ASSERT_NE(nullptr, m_io);
   ASSERT_TRUE(m_io->Init());
