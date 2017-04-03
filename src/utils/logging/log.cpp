@@ -69,7 +69,7 @@ void Log::LogContent(const char *filename, const int lineno,
     prefixLen = 0;
   va_list args; //定义一个va_list类型的变量，用来储存单个参数
   va_start(args, format); //使args指向可变参数的第一个参数
-  offset = snprintf(m_logBuffer + prefixLen, 2 * LOG_BUFFER_LENGTH - prefixLen,
+  offset = vsnprintf(m_logBuffer + prefixLen, 2 * LOG_BUFFER_LENGTH - prefixLen,
                     format, args); //必须用vprintf等带V的
   va_end(args);
   if (offset > 0) {

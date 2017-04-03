@@ -25,7 +25,6 @@ void IOLoop::OnThreadClose() {
   if (m_threadLivedCount > 0)
     InterlockedExchangeAdd(&m_threadLivedCount, -1);
   LOG_INFO("thread %ld destroy", m_threadLivedCount);
-  std::cout << "thread " << m_threadLivedCount << " destroy" << std::endl;
 }
 
 long IOLoop::GetThreadLivedCount() { return m_threadLivedCount; }
@@ -51,7 +50,6 @@ bool IOLoop::Init() {
     }
     ++m_threadLivedCount;
     LOG_INFO("thread %ld created", m_threadLivedCount);
-    std::cout << "thread " << m_threadLivedCount << " created" << std::endl;
     CloseHandle(threadHandle);
   }
   return true;
@@ -86,6 +84,9 @@ DWORD _stdcall ServerWorkThread(LPVOID CompletionPortID) {
   // DWORD flags;
 
   while (1) {
+    bytesTransferred = 0;
+    pIoData = NULL;
+    socket = NULL;
     if (GetQueuedCompletionStatus(complationPort, &bytesTransferred,
                                   (PULONG_PTR)&socket, (LPOVERLAPPED *)&pIoData,
                                   INFINITE) == 0) {
@@ -94,14 +95,18 @@ DWORD _stdcall ServerWorkThread(LPVOID CompletionPortID) {
       return 0;
     }
 
-    if (socket == NULL && pIoData->operationType == END_THREAD)
+    if (socket == NULL && pIoData->operationType == END_THREAD) {
+      LOG_INFO("thread end with outof loop");
       break;
+    }
 
     // 检查本次是否有数据接收,如没有，是为socket结束信号
     if (bytesTransferred == 0) {
       // std::cout<< " Start closing socket..."<< std::endl;
-      if (socket == NULL)
+      if (socket == NULL) {
+        LOG_ERROR("socket is NULL");
         continue;
+      }
       // if (CloseHandle((HANDLE)socket->GetHandle()) == SOCKET_ERROR) {
       // std::cout<< "Close socket failed. Error:"<< GetLastError()<<
       // std::endl;
@@ -115,19 +120,29 @@ DWORD _stdcall ServerWorkThread(LPVOID CompletionPortID) {
 
     switch (pIoData->operationType) {
     case SEND: {
-      if (WSASend(socket->GetHandle(), &(pIoData->databuff), 1,
-                  &bytesTransferred, 0, &(pIoData->overlapped),
-                  NULL) == SOCKET_ERROR) {
-        if (WSAGetLastError() != ERROR_IO_PENDING) {
-          LOG_ERROR("can not send, socket exit");
-          delete socket;
-          delete pIoData;
+      LOG_INFO("IOCP send event, bytesTransferred = %d, sockettype = %d", bytesTransferred, socket->GetSocketType());
+      pIoData->dataOpretedLen += bytesTransferred;
+      if (pIoData->dataOpretedLen == pIoData->databuff.len) {
+        LOG_INFO("IOCP msg[%d] send OK databuff.len = %d", pIoData->dataOpretedLen, pIoData->databuff.len);
+        delete pIoData;
+      } else {
+        pIoData->databuff.buf = pIoData->buffer + pIoData->dataOpretedLen;
+        pIoData->databuff.len -= pIoData->dataOpretedLen;
+        if (WSASend(socket->GetHandle(), &(pIoData->databuff), 1,
+                    &bytesTransferred, 0, &(pIoData->overlapped),
+                    NULL) == SOCKET_ERROR) {
+          if (WSAGetLastError() != ERROR_IO_PENDING) {
+            LOG_ERROR("can not send, socket exit");
+            delete socket;
+            delete pIoData;
+          }
         }
       }
       break;
     }
     case RECV: {
-      if (socket->OnRecvMsg(pIoData->databuff.buf, pIoData->databuff.len)) {
+      LOG_INFO("IOCP recv event, bytesTransferred = %d, sockettype = %d", bytesTransferred, socket->GetSocketType());
+      if (socket->OnRecvMsg(pIoData->databuff.buf, bytesTransferred)) {
         if (!socket->PostRecvMsg(pIoData)) {
           LOG_ERROR("can not recv, socket exit");
           delete socket;
@@ -140,13 +155,14 @@ DWORD _stdcall ServerWorkThread(LPVOID CompletionPortID) {
       break;
     }
     case START_ACCEPT: {
+      LOG_INFO("IOCP accept event, bytesTransferred = %d, sockettype = %d", bytesTransferred, socket->GetSocketType());
       socket->PostAcceptMsg();
       if (!pIoData->socketForAccept)
         break;
       Socket *acceptedSocket = pIoData->socketForAccept;
       if (acceptedSocket->OnAcceptSocket(pIoData)) {
         acceptedSocket->SetDataHandleFunc(socket->GetDataHandleFunc());
-        acceptedSocket->PostRecvMsg(nullptr);
+        // acceptedSocket->PostRecvMsg(nullptr);
       }
       delete pIoData;
       break;
@@ -160,32 +176,6 @@ DWORD _stdcall ServerWorkThread(LPVOID CompletionPortID) {
       break;
     }
     }
-
-    // socket->OnRecvMsg(pIoData->databuff.buf, pIoData->databuff.len);
-
-    // if (pIoData->callback) {
-    //     pIoData->callback(pIoData->databuff.buf, bytesTransferred);
-    // }
-
-    // ZeroMemory(&(pIoData->overlapped), sizeof( OVERLAPPED ));
-    // pIoData->databuff.len= DataBuffSize;
-    // pIoData->databuff.buf= pIoData->buffer;
-
-    // if( WSARecv(pHandleData->socket,&(pIoData->databuff),1, &recvBytes,
-    // &flags, &(pIoData->overlapped),NULL )== SOCKET_ERROR)
-    // {
-    //     if( WSAGetLastError() != ERROR_IO_PENDING)
-    //     {
-    //         // std::cout<< "WSARecv() failed. Error:"<< GetLastError()<<
-    //         std::endl;
-    //         return 0;
-    //     }
-    //     else
-    //     {
-    //         // std::cout<< "WSARecv() io pending"<< std::endl;
-    //         return 0;
-    //     }
-    // }
   }
   IOLoop *io = IOLoop::Instanse();
   if (io)
@@ -197,7 +187,11 @@ bool IOLoop::AddServerSocket(Socket *socket) {
   if (!socket)
     return false;
   HANDLE socketHandle = (HANDLE)socket->GetHandle();
-  CreateIoCompletionPort(socketHandle, m_completionPort, (ULONG_PTR)socket, 0);
+  HANDLE ret = CreateIoCompletionPort(socketHandle, m_completionPort, (ULONG_PTR)socket, 0);
+  if (!ret) {
+    LOG_ERROR("add server socket error, %d", GetLastError());
+    return false;
+  }
   return socket->PostAcceptMsg();
   // LPPER_IO_DATA perIoData = new PER_IO_DATA;
   // memset(&(perIoData->overlapped), sizeof(OVERLAPPED), 0);
@@ -214,7 +208,11 @@ bool IOLoop::AddClientSocket(Socket *socket) {
   if (!socket)
     return false;
   HANDLE socketHandle = (HANDLE)socket->GetHandle();
-  CreateIoCompletionPort(socketHandle, m_completionPort, (ULONG_PTR)socket, 0);
+  HANDLE ret = CreateIoCompletionPort(socketHandle, m_completionPort, (ULONG_PTR)socket, 0);
+  if (!ret) {
+    LOG_ERROR("add client socket error, %d", GetLastError());
+    return false;
+  }
   return true;
 }
 
@@ -222,7 +220,11 @@ bool IOLoop::AddAcceptedSocket(Socket *socket) {
   if (!socket)
     return false;
   HANDLE socketHandle = (HANDLE)socket->GetHandle();
-  CreateIoCompletionPort(socketHandle, m_completionPort, (ULONG_PTR)socket, 0);
-  return socket->PostRecvMsg(nullptr);
+  HANDLE ret = CreateIoCompletionPort(socketHandle, m_completionPort, (ULONG_PTR)socket, 0);
+  if (!ret) {
+    LOG_ERROR("add accept socket error, %d", GetLastError());
+    return false;
+  }
+  return true;
 }
 }

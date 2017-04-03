@@ -18,8 +18,9 @@ char recvStr[1024];
 bool DataCallback(char *data, int length) {
   if (!data || length <= 0)
     return false;
-  int expectlen = length <= 1000 ? length : 1000;
+  int expectlen = length <= 10 ? length : 10;
   memcpy(recvStr, data, expectlen);
+  recvStr[expectlen] = '\0';
   LOG_DEBUG("recv msg: %s", recvStr);
   return true;
 }

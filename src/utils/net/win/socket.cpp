@@ -31,9 +31,7 @@ bool Socket::SetDataHandleFunc(DataHandleCallback func) {
   return true;
 }
 
-DataHandleCallback Socket::GetDataHandleFunc() {
-  return m_dataHandleCallback;
-}
+DataHandleCallback Socket::GetDataHandleFunc() { return m_dataHandleCallback; }
 
 Socket::~Socket() {
   if (m_socketHandle) {
@@ -46,8 +44,8 @@ bool Socket::init() {
     LOG_ERROR("socket type errro, %d", m_socketType);
     return false;
   }
-  if (m_port <= 0) {
-   LOG_ERROR("socket port errro, %d", m_port);
+  if (m_port <= 0 && m_socketType == SERVER) {
+    LOG_ERROR("socket port errro, %d", m_port);
     return false;
   }
 
@@ -58,7 +56,8 @@ bool Socket::init() {
   }
   m_socketHandle =
       WSASocketW(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
-  getAcceptExFunc();
+  if (!getAcceptExFunc())
+    return false;
   if (m_socketType == CLIENT) {
     if (connect(m_socketHandle, (SOCKADDR *)&m_addr, sizeof(m_addr)) != 0) {
       LOG_ERROR("socket connet fail, %d", GetLastError());
@@ -84,7 +83,7 @@ bool Socket::init() {
 }
 
 bool Socket::getAcceptExFunc() {
-  if (!Socket::m_acceptExFunc)
+  if (Socket::m_acceptExFunc)
     return true;
   GUID guidAcceptEx = WSAID_ACCEPTEX;
   // get acceptex function pointer
@@ -94,6 +93,7 @@ bool Socket::getAcceptExFunc() {
                sizeof(Socket::m_acceptExFunc), &dwBytes, NULL, NULL) == 0) {
     return true;
   }
+  LOG_ERROR("get acceptEx func fail, %d", GetLastError());
   return false;
 }
 
@@ -128,20 +128,27 @@ bool Socket::PostAcceptMsg() {
   DWORD dwBytes = 0;
   LPPER_IO_DATA perIoData = new PER_IO_DATA;
   memset(&(perIoData->overlapped), 0, sizeof(OVERLAPPED));
-  perIoData->databuff.len = DATA_BUF_SIZE;
+  perIoData->bufferLen = DATA_BUF_SIZE;
+  perIoData->databuff.len = dwBytes;
   perIoData->databuff.buf = perIoData->buffer;
   perIoData->operationType = START_ACCEPT;
+  perIoData->dataOpretedLen = 0;
   perIoData->socketForAccept = new Socket(ACCEPT);
-  perIoData->socketForAccept->init();
-  BOOL ret =
-      Socket::m_acceptExFunc(m_socketHandle, perIoData->socketForAccept->GetHandle(),
-                     perIoData->buffer,
-                     perIoData->bufferLen - ((sizeof(SOCKADDR_IN) + 16) * 2),
-                     sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16,
-                     &dwBytes, &(perIoData->overlapped));
-  if (FALSE == ret && ERROR_IO_PENDING != GetLastError()) {
+  if (!perIoData->socketForAccept->init()) {
+    LOG_ERROR("socketForAccept init fail");
     return false;
   }
+  BOOL ret = Socket::m_acceptExFunc(
+      m_socketHandle, perIoData->socketForAccept->GetHandle(),
+      perIoData->buffer,
+      perIoData->bufferLen - ((sizeof(SOCKADDR_IN) + 16) * 2),
+      sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16, &dwBytes,
+      &(perIoData->overlapped));
+  if (FALSE == ret && ERROR_IO_PENDING != GetLastError()) {
+    LOG_ERROR("socket add accept fail, %d", GetLastError());
+    return false;
+  }
+  LOG_INFO("socket post accept request");
   return true;
 }
 
@@ -150,14 +157,17 @@ bool Socket::PostSendMsg(void *data, size_t length) {
     return false;
   if (length >= DATA_BUF_SIZE)
     return false;
+  LOG_INFO("send msg[%d]: %s", length, (char*)data);
   DWORD sendBytes = (DWORD)length;
   LPPER_IO_DATA perIoData = new PER_IO_DATA;
   memset(&(perIoData->overlapped), 0, sizeof(OVERLAPPED));
-  perIoData->databuff.len = DATA_BUF_SIZE;
+  perIoData->bufferLen = DATA_BUF_SIZE;
+  perIoData->databuff.len = sendBytes;
   perIoData->databuff.buf = perIoData->buffer;
   memcpy(perIoData->buffer, data, length);
   perIoData->operationType = SEND;
   perIoData->socketForAccept = NULL;
+  perIoData->dataOpretedLen = 0;
   if (WSASend(m_socketHandle, &(perIoData->databuff), 1, &sendBytes, 0,
               &(perIoData->overlapped), NULL) == SOCKET_ERROR) {
     if (WSAGetLastError() != ERROR_IO_PENDING)
@@ -171,6 +181,7 @@ bool Socket::OnRecvMsg(char *data, int length) {
     return false;
   if (length <= 0)
     return false;
+  LOG_INFO("socket recv data 0x%X, length = %d", data, length);
   if (!m_dataHandleCallback)
     return false;
   m_dataHandleCallback(data, length);
@@ -187,32 +198,44 @@ bool Socket::PostRecvMsg(void *data) {
   memset(&(perIoData->overlapped), 0, sizeof(OVERLAPPED));
   perIoData->databuff.len = DATA_BUF_SIZE;
   perIoData->databuff.buf = perIoData->buffer;
+  perIoData->bufferLen = DATA_BUF_SIZE;
   // memcpy(data, perIoData->buffer, length);
   perIoData->operationType = RECV;
   perIoData->socketForAccept = NULL;
+  perIoData->dataOpretedLen = 0;
   int ret = WSARecv(m_socketHandle, &(perIoData->databuff), 1, &recvBytes,
                     &flags, &(perIoData->overlapped), NULL);
   if (ret != 0) {
-    if (ret != WSA_IO_PENDING) {
+    if (GetLastError() != WSA_IO_PENDING) {
+      LOG_ERROR("socket post recv error[%d], %d", ret, GetLastError());
       return false;
     }
   }
+  LOG_INFO("socket post recv quest");
   return true;
 }
 
 bool Socket::OnAcceptSocket(void *data) {
   if (!data)
     return false;
+  LOG_INFO("accept one socket");
   LPPER_IO_DATA perIoData = (LPPER_IO_DATA)data;
-  if (perIoData->socketForAccept != this)
+  if (perIoData->socketForAccept != this) {
+    LOG_ERROR("socket accept object error");
     return false;
+  }
   int ret = setsockopt(m_socketHandle, SOL_SOCKET, SO_UPDATE_ACCEPT_CONTEXT,
                        (char *)&(m_socketHandle), sizeof(m_socketHandle));
-  if (ret == SOCKET_ERROR)
+  if (ret == SOCKET_ERROR) {
+    LOG_ERROR("socket opt error, %d", GetLastError());
     return false;
+  }
   IOLoop *io = IOLoop::Instanse();
-  if (!io->AddAcceptedSocket(this))
+  if (!io->AddAcceptedSocket(this)) {
+    LOG_ERROR("socker add to io error");
     return false;
+  }
   return PostRecvMsg(nullptr);
 }
+
 }
