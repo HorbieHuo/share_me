@@ -35,14 +35,12 @@ protected:
     memset(recvStr, 0, sizeof(recvStr));
   }
   virtual void TearDown() {
-    std::cout << "SocketUnittest TearDown ..." << std::endl;
     if (m_io) {
       m_io->Release();
       m_io = nullptr;
     }
     for (int i = 0; i < SOCKET_CONTINER_CAPACITY; ++i) {
       if (m_sockets[i]) {
-        std::cout << "delete socket " << i << std::endl;
         delete m_sockets[i];
         m_sockets[i] = nullptr;
       }
@@ -78,16 +76,8 @@ TEST_F(SocketUnittest, socket_send_and_recieve) {
   EXPECT_TRUE(m_sockets[1]->PostSendMsg("12345", 5));
   Sleep(10);
   EXPECT_STREQ("12345", recvStr);
-  EXPECT_TRUE(m_sockets[1]->PostSendMsg("0", 0));
-  Sleep(10);
-  // EXPECT_TRUE(m_sockets[1]->PostSendMsg(testStr, 5));
-  // EXPECT_TRUE(m_sockets[1]->PostSendMsg(testStr, 5));
-  // EXPECT_TRUE(m_sockets[1]->PostSendMsg(testStr, 5));
-  // EXPECT_TRUE(m_sockets[1]->PostSendMsg(testStr, 5));
-  // EXPECT_TRUE(m_sockets[1]->PostSendMsg(testStr, 5));
-  // EXPECT_TRUE(m_sockets[1]->PostSendMsg(testStr, 5));
-  // EXPECT_TRUE(m_sockets[1]->PostSendMsg(testStr, 5));
-  // Sleep(1000);
+  // EXPECT_TRUE(m_sockets[1]->PostSendMsg("0", 0));
+  // Sleep(10);
 }
 
 int main(int argc, char *argv[]) {

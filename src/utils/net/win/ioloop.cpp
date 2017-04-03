@@ -41,11 +41,10 @@ bool IOLoop::Init() {
 
   for (int i = 0; i < MAX_THREAD_COUNT; ++i) {
     HANDLE threadHandle;
-    // PTHREAD_START_ROUTINE
     threadHandle =
         CreateThread(NULL, 0, ServerWorkThread, m_completionPort, 0, &threadID);
     if (threadHandle == NULL) {
-      // std::cout<< "CreateThread failed. Error:"<< GetLastError()<< std::endl;
+      LOG_ERROR("CreateThread failed, %d", WSAGetLastError());
       return false;
     }
     ++m_threadLivedCount;
@@ -90,8 +89,6 @@ DWORD _stdcall ServerWorkThread(LPVOID CompletionPortID) {
     if (GetQueuedCompletionStatus(complationPort, &bytesTransferred,
                                   (PULONG_PTR)&socket, (LPOVERLAPPED *)&pIoData,
                                   INFINITE) == 0) {
-      // std::cout<< "GetQueuedCompletionStatus failed. Error:"<<
-      // GetLastError()<< std::endl;
       LOG_ERROR("GetQueuedCompletionStatus error, %d", WSAGetLastError());
       break;
     }
@@ -190,7 +187,7 @@ bool IOLoop::AddServerSocket(Socket *socket) {
   HANDLE ret = CreateIoCompletionPort(socketHandle, m_completionPort,
                                       (ULONG_PTR)socket, 0);
   if (!ret) {
-    LOG_ERROR("add server socket error, %d", GetLastError());
+    LOG_ERROR("add server socket error, %d", WSAGetLastError());
     return false;
   }
   return socket->PostAcceptMsg();
@@ -212,7 +209,7 @@ bool IOLoop::AddClientSocket(Socket *socket) {
   HANDLE ret = CreateIoCompletionPort(socketHandle, m_completionPort,
                                       (ULONG_PTR)socket, 0);
   if (!ret) {
-    LOG_ERROR("add client socket error, %d", GetLastError());
+    LOG_ERROR("add client socket error, %d", WSAGetLastError());
     return false;
   }
   return socket->PostRecvMsg(nullptr);
@@ -225,7 +222,7 @@ bool IOLoop::AddAcceptedSocket(Socket *socket) {
   HANDLE ret = CreateIoCompletionPort(socketHandle, m_completionPort,
                                       (ULONG_PTR)socket, 0);
   if (!ret) {
-    LOG_ERROR("add accept socket error, %d", GetLastError());
+    LOG_ERROR("add accept socket error, %d", WSAGetLastError());
     return false;
   }
   return true;

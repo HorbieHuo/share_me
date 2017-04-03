@@ -163,7 +163,6 @@ bool Socket::PostSendMsg(void *data, size_t length) {
     return false;
   if (length >= DATA_BUF_SIZE)
     return false;
-  LOG_INFO("send msg[%d]: %s", length, (char*)data);
   DWORD sendBytes = (DWORD)length;
   LPPER_IO_DATA perIoData = new PER_IO_DATA;
   memset(&(perIoData->overlapped), 0, sizeof(OVERLAPPED));
