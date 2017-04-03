@@ -44,6 +44,10 @@ TEST_F(SocketUnittest, socket_send_and_recieve) {
   m_io = IOLoop::Instanse();
   ASSERT_NE(nullptr, m_io);
   ASSERT_TRUE(m_io->Init());
+  m_sockets[0] = new Socket(9999);
+  ASSERT_NE(nullptr, m_sockets[0]);
+  ASSERT_TRUE(m_sockets[0]->Start());
+  ASSERT_TRUE(m_io->AddServerSocket(m_sockets[0]));
 }
 
 int main(int argc, char *argv[]) {

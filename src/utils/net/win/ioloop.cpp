@@ -208,4 +208,12 @@ bool IOLoop::AddClientSocket(Socket *socket) {
   CreateIoCompletionPort(socketHandle, m_completionPort, (ULONG_PTR)socket, 0);
   return true;
 }
+
+bool IOLoop::AddAcceptedSocket(Socket *socket) {
+  if (!socket)
+    return false;
+  HANDLE socketHandle = (HANDLE)socket->GetHandle();
+  CreateIoCompletionPort(socketHandle, m_completionPort, (ULONG_PTR)socket, 0);
+  return socket->PostRecvMsg(nullptr);
+}
 }

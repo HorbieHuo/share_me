@@ -2,6 +2,8 @@
 
 namespace share_me_utils {
 
+LPFN_ACCEPTEX Socket::m_acceptExFunc = nullptr;
+
 Socket::Socket() : m_socketHandle(0), m_port(-1), m_addr({0}) {}
 
 Socket::Socket(int port) {
@@ -67,14 +69,14 @@ bool Socket::init() {
 }
 
 bool Socket::getAcceptExFunc() {
-  if (!m_acceptExFunc)
+  if (!Socket::m_acceptExFunc)
     return true;
   GUID guidAcceptEx = WSAID_ACCEPTEX;
   // get acceptex function pointer
   DWORD dwBytes = 0;
   if (WSAIoctl(m_socketHandle, SIO_GET_EXTENSION_FUNCTION_POINTER,
-               &guidAcceptEx, sizeof(guidAcceptEx), &m_acceptExFunc,
-               sizeof(m_acceptExFunc), &dwBytes, NULL, NULL) == 0) {
+               &guidAcceptEx, sizeof(guidAcceptEx), &Socket::m_acceptExFunc,
+               sizeof(Socket::m_acceptExFunc), &dwBytes, NULL, NULL) == 0) {
     return true;
   }
   return false;
@@ -85,10 +87,10 @@ bool Socket::Start() {
     return false;
   if (!m_socketHandle)
     return false;
-  IOLoop *io = IOLoop::Instanse();
-  if (!io)
-    return false;
-  CreateIoCompletionPort((HANDLE)m_socketHandle, io, (DWORD)0, 0);
+  // IOLoop *io = IOLoop::Instanse();
+  // if (!io)
+  //   return false;
+  // CreateIoCompletionPort((HANDLE)m_socketHandle, io, (DWORD)0, 0);
   // if (m_socketType == CLIENT) {
 
   // }
@@ -98,7 +100,7 @@ bool Socket::Start() {
 bool Socket::PostAcceptMsg() {
   if (m_socketType != SERVER)
     return false;
-  if (!m_acceptExFunc)
+  if (!Socket::m_acceptExFunc)
     return false;
   DWORD dwBytes = 0;
   LPPER_IO_DATA perIoData = new PER_IO_DATA;
@@ -109,7 +111,7 @@ bool Socket::PostAcceptMsg() {
   perIoData->socketForAccept = new Socket(ACCEPT);
   perIoData->socketForAccept->init();
   BOOL ret =
-      m_acceptExFunc(m_socketHandle, perIoData->socketForAccept->GetHandle(),
+      Socket::m_acceptExFunc(m_socketHandle, perIoData->socketForAccept->GetHandle(),
                      perIoData->buffer,
                      perIoData->bufferLen - ((sizeof(SOCKADDR_IN) + 16) * 2),
                      sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16,

@@ -10,7 +10,7 @@ public:
   enum SOCKET_TYPE { MIN_INVALID, CLIENT, SERVER, ACCEPT, MAX_INVALID };
 
   // ISocket();
-  virtual ~ISocket() = 0;
+  virtual ~ISocket() {};
   virtual bool Start() = 0;
   virtual bool SetDataHandleFunc(DataHandleCallback func) = 0;
   virtual bool PostAcceptMsg() = 0;
