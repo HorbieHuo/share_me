@@ -5,6 +5,7 @@
 #include <iostream>
 #include <mswsock.h>
 #include <vector>
+#include <log.h>
 
 #include "socket.h"
 
@@ -14,7 +15,7 @@ class Socket;
 
 #define SEND ((unsigned long)1)
 #define RECV ((unsigned long)1 << 1)
-#define ACCEPT ((unsigned long)1 << 2)
+// #define ACCEPT ((unsigned long)1 << 2)
 #define START_ACCEPT ((unsigned long)1 << 3)
 #define END_THREAD ((unsigned long)1 << 4)
 
@@ -60,6 +61,7 @@ public:
 
   bool AddServerSocket(Socket *socket);
   bool AddClientSocket(Socket *socket);
+  bool AddAcceptedSocket(Socket* socket);
 
   // static DWORD ServerWorkThread(LPVOID CompletionPortID);
 };

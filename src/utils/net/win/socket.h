@@ -16,6 +16,7 @@ class Socket: public ISocket {
         explicit Socket(int port);
         explicit Socket(SOCKET_TYPE socketType);
         explicit Socket(std::string ip, int port, SOCKET_TYPE socketType);
+        virtual ~Socket();
 
         void Set(SOCKET_TYPE socketType);
 		SOCKET GetHandle() { return m_socketHandle; }
@@ -28,7 +29,8 @@ class Socket: public ISocket {
         virtual bool PostSendMsg(void* data, size_t length);
         virtual bool PostRecvMsg(void* data);
 
-        virtual void OnRecvMsg(char* data, int length);
+        virtual bool OnRecvMsg(char* data, int length);
+        virtual bool OnAcceptSocket(void* data);
 
     private:
 

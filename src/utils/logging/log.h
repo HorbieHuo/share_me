@@ -18,12 +18,12 @@ namespace share_me_utils {
 class Log {
 public:
   enum LEVEL {
-    TRACE = 0,
-    DEBUG,
-    INFO,
-    ERROR,
-    FATAL,
-    INVALID,
+    S_TRACE = 0,
+    S_DEBUG,
+    S_INFO,
+    S_ERROR,
+    S_FATAL,
+    S_INVALID,
   };
 
 public:
@@ -53,23 +53,23 @@ private:
   };
   char m_prefixSymbols[eTop];
   int m_prefixSwitchs[eTop];
-  char *m_levelString[INVALID];
+  char *m_levelString[S_INVALID];
 };
 
 #define LOG_TRACE(formart, ...)                                                \
-  (Log::Instance()->LogContent(__FILE__, __LINE__, __func__, Log::TRACE,       \
+  (Log::Instance()->LogContent(__FILE__, __LINE__, __func__, Log::S_TRACE,       \
                                formart, __VA_ARGS__))
 #define LOG_DEBUG(formart, ...)                                                \
-  (Log::Instance()->LogContent(__FILE__, __LINE__, __func__, Log::DEBUG,       \
+  (Log::Instance()->LogContent(__FILE__, __LINE__, __func__, Log::S_DEBUG,       \
                                formart, __VA_ARGS__))
 #define LOG_INFO(formart, ...)                                                 \
-  (Log::Instance()->LogContent(__FILE__, __LINE__, __func__, Log::INFO,        \
+  (Log::Instance()->LogContent(__FILE__, __LINE__, __func__, Log::S_INFO,        \
                                formart, __VA_ARGS__))
 #define LOG_ERROR(formart, ...)                                                \
-  (Log::Instance()->LogContent(__FILE__, __LINE__, __func__, Log::ERROR,       \
+  (Log::Instance()->LogContent(__FILE__, __LINE__, __func__, Log::S_ERROR,       \
                                formart, __VA_ARGS__))
 #define LOG_FATAL(formart, ...)                                                \
-  (Log::Instance()->LogContent(__FILE__, __LINE__, __func__, Log::FATAL,       \
+  (Log::Instance()->LogContent(__FILE__, __LINE__, __func__, Log::S_FATAL,       \
                                formart, __VA_ARGS__))
 
 } // namespace share_me_utils

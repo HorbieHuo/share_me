@@ -12,6 +12,11 @@ ENDIF(UNIX)
 
 ADD_LIBRARY(SSocket STATIC ${SRC_LIST})
 
+IF(UNIX)
+    TARGET_LINK_LIBRARIES(SSocket SLog)
+ELSEIF(WIN32)
+    TARGET_LINK_LIBRARIES(SSocket SLog Ws2_32)
+ENDIF(UNIX)
 # IF(${UNITTEST})
 #     # add_executable(main main.cpp)
 #     ADD_EXECUTABLE(socket_unittest socket_unittest.cpp)

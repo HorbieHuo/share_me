@@ -16,7 +16,7 @@ public:
   virtual bool PostAcceptMsg() = 0;
   virtual bool PostSendMsg(void *data, size_t length) = 0;
   virtual bool PostRecvMsg(void *data) = 0;
-  virtual void OnRecvMsg(char *data, int length) = 0;
+  virtual bool OnRecvMsg(char *data, int length) = 0;
 };
 
 }

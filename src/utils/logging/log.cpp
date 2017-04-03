@@ -11,11 +11,12 @@ Log::Log() {
   m_prefixSymbols[eFunc] = 'f';
   m_prefixSymbols[eLine] = 'l';
 
-  m_levelString[TRACE] = "TRACE";
-  m_levelString[DEBUG] = "DEBUG";
-  m_levelString[INFO] = "INFO";
-  m_levelString[ERROR] = "ERROR";
-  m_levelString[FATAL] = "FATAL";
+  m_levelString[S_TRACE] = "TRACE";
+  m_levelString[S_DEBUG] = "DEBUG";
+  m_levelString[S_INFO] = "INFO";
+  m_levelString[S_ERROR] = "ERROR";
+  m_levelString[S_FATAL] = "FATAL";
+  SetPrefix("%d %t %F %f %l");
 }
 
 Log *Log::Instance() {
@@ -33,7 +34,7 @@ bool Log::SetPrefix(const char *prefix) {
 
   const char *s = prefix;
   bool switchConfiged[eTop] = {false};
-
+  memset(m_prefixSwitchs, -1, sizeof(m_prefixSwitchs));
   for (int i = 0; s[i] != '\0'; ++i) {
     if (s[i] == '%') {
       if (i >= 1 && s[i - 1] == '\\')

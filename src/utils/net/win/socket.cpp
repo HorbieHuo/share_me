@@ -28,6 +28,12 @@ bool Socket::SetDataHandleFunc(DataHandleCallback func) {
   return true;
 }
 
+Socket::~Socket() {
+  if (m_socketHandle) {
+    closesocket(m_socketHandle);
+  }
+}
+
 bool Socket::init() {
   if (m_socketType >= MAX_INVALID || m_socketType <= MIN_INVALID)
     return false;
@@ -75,6 +81,8 @@ bool Socket::getAcceptExFunc() {
 }
 
 bool Socket::Start() {
+  if (!init())
+    return false;
   if (!m_socketHandle)
     return false;
   IOLoop *io = IOLoop::Instanse();
@@ -122,7 +130,7 @@ bool Socket::PostSendMsg(void *data, size_t length) {
   memset(&(perIoData->overlapped), 0, sizeof(OVERLAPPED));
   perIoData->databuff.len = DATA_BUF_SIZE;
   perIoData->databuff.buf = perIoData->buffer;
-  memcpy(data, perIoData->buffer, length);
+  memcpy(perIoData->buffer, data, length);
   perIoData->operationType = SEND;
   perIoData->socketForAccept = NULL;
   if (WSASend(m_socketHandle, &(perIoData->databuff), 1, &sendBytes, 0,
@@ -133,14 +141,15 @@ bool Socket::PostSendMsg(void *data, size_t length) {
   return true;
 }
 
-void Socket::OnRecvMsg(char *data, int length) {
+bool Socket::OnRecvMsg(char *data, int length) {
   if (!data)
-    return;
+    return false;
   if (length <= 0)
-    return;
+    return false;
   if (!m_dataHandleCallback)
-    return;
+    return false;
   m_dataHandleCallback(data, length);
+  return true;
 }
 
 bool Socket::PostRecvMsg(void *data) {
@@ -164,5 +173,21 @@ bool Socket::PostRecvMsg(void *data) {
     }
   }
   return true;
+}
+
+bool Socket::OnAcceptSocket(void *data) {
+  if (!data)
+    return false;
+  LPPER_IO_DATA perIoData = (LPPER_IO_DATA)data;
+  if (perIoData->socketForAccept != this)
+    return false;
+  int ret = setsockopt(m_socketHandle, SOL_SOCKET, SO_UPDATE_ACCEPT_CONTEXT,
+                       (char *)&(m_socketHandle), sizeof(m_socketHandle));
+  if (ret == SOCKET_ERROR)
+    return false;
+  IOLoop *io = IOLoop::Instanse();
+  if (!io->AddAcceptedSocket(this))
+    return false;
+  return PostRecvMsg(nullptr);
 }
 }
