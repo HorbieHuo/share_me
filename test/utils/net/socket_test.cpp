@@ -18,7 +18,7 @@ char recvStr[1024];
 bool DataCallback(char *data, int length) {
   if (!data || length <= 0)
     return false;
-  int expectlen = length <= 10 ? length : 10;
+  int expectlen = length <= 100 ? length : 100;
   memcpy(recvStr, data, expectlen);
   recvStr[expectlen] = '\0';
   LOG_DEBUG("recv msg: %s", recvStr);
@@ -42,10 +42,12 @@ protected:
     }
     for (int i = 0; i < SOCKET_CONTINER_CAPACITY; ++i) {
       if (m_sockets[i]) {
+        std::cout << "delete socket " << i << std::endl;
         delete m_sockets[i];
         m_sockets[i] = nullptr;
       }
     }
+    std::cout << "SocketUnittest TearDown finish..." << std::endl;
   }
 
   IOLoop *m_io;
@@ -69,9 +71,23 @@ TEST_F(SocketUnittest, socket_send_and_recieve) {
   ASSERT_NE(nullptr, m_sockets[1]);
   ASSERT_TRUE(m_sockets[1]->Start());
   ASSERT_TRUE(m_io->AddClientSocket(m_sockets[1]));
+  Sleep(10);
   EXPECT_TRUE(m_sockets[1]->PostSendMsg(testStr, 5));
-  Sleep(1000);
-  ASSERT_STREQ(testStr, recvStr);
+  Sleep(10);
+  EXPECT_STREQ(testStr, recvStr);
+  EXPECT_TRUE(m_sockets[1]->PostSendMsg("12345", 5));
+  Sleep(10);
+  EXPECT_STREQ("12345", recvStr);
+  EXPECT_TRUE(m_sockets[1]->PostSendMsg("0", 0));
+  Sleep(10);
+  // EXPECT_TRUE(m_sockets[1]->PostSendMsg(testStr, 5));
+  // EXPECT_TRUE(m_sockets[1]->PostSendMsg(testStr, 5));
+  // EXPECT_TRUE(m_sockets[1]->PostSendMsg(testStr, 5));
+  // EXPECT_TRUE(m_sockets[1]->PostSendMsg(testStr, 5));
+  // EXPECT_TRUE(m_sockets[1]->PostSendMsg(testStr, 5));
+  // EXPECT_TRUE(m_sockets[1]->PostSendMsg(testStr, 5));
+  // EXPECT_TRUE(m_sockets[1]->PostSendMsg(testStr, 5));
+  // Sleep(1000);
 }
 
 int main(int argc, char *argv[]) {

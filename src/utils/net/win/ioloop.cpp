@@ -92,7 +92,8 @@ DWORD _stdcall ServerWorkThread(LPVOID CompletionPortID) {
                                   INFINITE) == 0) {
       // std::cout<< "GetQueuedCompletionStatus failed. Error:"<<
       // GetLastError()<< std::endl;
-      return 0;
+      LOG_ERROR("GetQueuedCompletionStatus error, %d", WSAGetLastError());
+      break;
     }
 
     if (socket == NULL && pIoData->operationType == END_THREAD) {
@@ -100,19 +101,8 @@ DWORD _stdcall ServerWorkThread(LPVOID CompletionPortID) {
       break;
     }
 
-    // 检查本次是否有数据接收,如没有，是为socket结束信号
-    if (bytesTransferred == 0) {
-      // std::cout<< " Start closing socket..."<< std::endl;
-      if (socket == NULL) {
-        LOG_ERROR("socket is NULL");
-        continue;
-      }
-      // if (CloseHandle((HANDLE)socket->GetHandle()) == SOCKET_ERROR) {
-      // std::cout<< "Close socket failed. Error:"<< GetLastError()<<
-      // std::endl;
-      // return 0;
-      // }
-
+    if (bytesTransferred == 0 && socket->GetSocketType() == Socket::ACCEPT) {
+      LOG_INFO("socket accept close, 0x%X", socket->GetHandle());
       delete socket;
       delete pIoData;
       continue;
@@ -120,10 +110,12 @@ DWORD _stdcall ServerWorkThread(LPVOID CompletionPortID) {
 
     switch (pIoData->operationType) {
     case SEND: {
-      LOG_INFO("IOCP send event, bytesTransferred = %d, sockettype = %d", bytesTransferred, socket->GetSocketType());
+      LOG_INFO("IOCP send event, bytesTransferred = %d, sockettype = %d",
+               bytesTransferred, socket->GetSocketType());
       pIoData->dataOpretedLen += bytesTransferred;
       if (pIoData->dataOpretedLen == pIoData->databuff.len) {
-        LOG_INFO("IOCP msg[%d] send OK databuff.len = %d", pIoData->dataOpretedLen, pIoData->databuff.len);
+        LOG_INFO("IOCP msg[%d] send OK databuff.len = %d",
+                 pIoData->dataOpretedLen, pIoData->databuff.len);
         delete pIoData;
       } else {
         pIoData->databuff.buf = pIoData->buffer + pIoData->dataOpretedLen;
@@ -141,7 +133,8 @@ DWORD _stdcall ServerWorkThread(LPVOID CompletionPortID) {
       break;
     }
     case RECV: {
-      LOG_INFO("IOCP recv event, bytesTransferred = %d, sockettype = %d", bytesTransferred, socket->GetSocketType());
+      LOG_INFO("IOCP recv event, bytesTransferred = %d, sockettype = %d",
+               bytesTransferred, socket->GetSocketType());
       if (socket->OnRecvMsg(pIoData->databuff.buf, bytesTransferred)) {
         if (!socket->PostRecvMsg(pIoData)) {
           LOG_ERROR("can not recv, socket exit");
@@ -155,13 +148,20 @@ DWORD _stdcall ServerWorkThread(LPVOID CompletionPortID) {
       break;
     }
     case START_ACCEPT: {
-      LOG_INFO("IOCP accept event, bytesTransferred = %d, sockettype = %d", bytesTransferred, socket->GetSocketType());
+      LOG_INFO("IOCP accept event, bytesTransferred = %d, sockettype = %d",
+               bytesTransferred, socket->GetSocketType());
       socket->PostAcceptMsg();
       if (!pIoData->socketForAccept)
         break;
       Socket *acceptedSocket = pIoData->socketForAccept;
       if (acceptedSocket->OnAcceptSocket(pIoData)) {
         acceptedSocket->SetDataHandleFunc(socket->GetDataHandleFunc());
+        if (bytesTransferred > 0) {
+          if (acceptedSocket->OnRecvMsg(pIoData->databuff.buf,
+                                        bytesTransferred)) {
+            LOG_ERROR("first deal accept data fail");
+          }
+        }
         // acceptedSocket->PostRecvMsg(nullptr);
       }
       delete pIoData;
@@ -187,7 +187,8 @@ bool IOLoop::AddServerSocket(Socket *socket) {
   if (!socket)
     return false;
   HANDLE socketHandle = (HANDLE)socket->GetHandle();
-  HANDLE ret = CreateIoCompletionPort(socketHandle, m_completionPort, (ULONG_PTR)socket, 0);
+  HANDLE ret = CreateIoCompletionPort(socketHandle, m_completionPort,
+                                      (ULONG_PTR)socket, 0);
   if (!ret) {
     LOG_ERROR("add server socket error, %d", GetLastError());
     return false;
@@ -208,19 +209,21 @@ bool IOLoop::AddClientSocket(Socket *socket) {
   if (!socket)
     return false;
   HANDLE socketHandle = (HANDLE)socket->GetHandle();
-  HANDLE ret = CreateIoCompletionPort(socketHandle, m_completionPort, (ULONG_PTR)socket, 0);
+  HANDLE ret = CreateIoCompletionPort(socketHandle, m_completionPort,
+                                      (ULONG_PTR)socket, 0);
   if (!ret) {
     LOG_ERROR("add client socket error, %d", GetLastError());
     return false;
   }
-  return true;
+  return socket->PostRecvMsg(nullptr);
 }
 
 bool IOLoop::AddAcceptedSocket(Socket *socket) {
   if (!socket)
     return false;
   HANDLE socketHandle = (HANDLE)socket->GetHandle();
-  HANDLE ret = CreateIoCompletionPort(socketHandle, m_completionPort, (ULONG_PTR)socket, 0);
+  HANDLE ret = CreateIoCompletionPort(socketHandle, m_completionPort,
+                                      (ULONG_PTR)socket, 0);
   if (!ret) {
     LOG_ERROR("add accept socket error, %d", GetLastError());
     return false;

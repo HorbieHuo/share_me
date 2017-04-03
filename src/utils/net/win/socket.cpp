@@ -34,6 +34,7 @@ bool Socket::SetDataHandleFunc(DataHandleCallback func) {
 DataHandleCallback Socket::GetDataHandleFunc() { return m_dataHandleCallback; }
 
 Socket::~Socket() {
+  LOG_INFO("socket handle 0x%X", m_socketHandle);
   if (m_socketHandle) {
     closesocket(m_socketHandle);
   }
@@ -56,6 +57,10 @@ bool Socket::init() {
   }
   m_socketHandle =
       WSASocketW(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
+  if (INVALID_SOCKET == m_socketHandle) {
+    LOG_ERROR("socket create fail, %d", WSAGetLastError());
+    return false;
+  }
   if (!getAcceptExFunc())
     return false;
   if (m_socketType == CLIENT) {
@@ -79,6 +84,7 @@ bool Socket::init() {
     LOG_ERROR("socket error type fail");
     return false;
   }
+  LOG_INFO("socket handle 0x%X, type = %d", m_socketHandle, m_socketType);
   return true;
 }
 
