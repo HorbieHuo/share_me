@@ -5,6 +5,7 @@
 #include <iostream>
 #include <mswsock.h>
 #include <vector>
+#include <log.h>
 
 #include "socket.h"
 
@@ -14,11 +15,11 @@ class Socket;
 
 #define SEND ((unsigned long)1)
 #define RECV ((unsigned long)1 << 1)
-#define ACCEPT ((unsigned long)1 << 2)
+// #define ACCEPT ((unsigned long)1 << 2)
 #define START_ACCEPT ((unsigned long)1 << 3)
 #define END_THREAD ((unsigned long)1 << 4)
 
-#define MAX_THREAD_COUNT 2
+#define MAX_THREAD_COUNT 1
 
 /**
 * 结构体名称：PER_IO_DATA
@@ -31,6 +32,7 @@ typedef struct {
   char buffer[DATA_BUF_SIZE];
   int bufferLen;
   int operationType;
+  int dataOpretedLen;
   Socket *socketForAccept;
 } PER_IO_OPERATEION_DATA, *LPPER_IO_OPERATION_DATA, *LPPER_IO_DATA, PER_IO_DATA;
 
@@ -60,6 +62,7 @@ public:
 
   bool AddServerSocket(Socket *socket);
   bool AddClientSocket(Socket *socket);
+  bool AddAcceptedSocket(Socket* socket);
 
   // static DWORD ServerWorkThread(LPVOID CompletionPortID);
 };

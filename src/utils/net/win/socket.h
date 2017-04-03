@@ -4,6 +4,8 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <string>
+#include <Mswsock.h>
+#include <log.h>
 
 #include "../isocket.h"
 #include "ioloop.h"
@@ -16,6 +18,7 @@ class Socket: public ISocket {
         explicit Socket(int port);
         explicit Socket(SOCKET_TYPE socketType);
         explicit Socket(std::string ip, int port, SOCKET_TYPE socketType);
+        virtual ~Socket();
 
         void Set(SOCKET_TYPE socketType);
 		SOCKET GetHandle() { return m_socketHandle; }
@@ -23,12 +26,14 @@ class Socket: public ISocket {
         virtual bool Start();
 
         virtual bool SetDataHandleFunc(DataHandleCallback func);
+        virtual DataHandleCallback GetDataHandleFunc();
 
         virtual bool PostAcceptMsg();
         virtual bool PostSendMsg(void* data, size_t length);
         virtual bool PostRecvMsg(void* data);
 
-        virtual void OnRecvMsg(char* data, int length);
+        virtual bool OnRecvMsg(char* data, int length);
+        virtual bool OnAcceptSocket(void* data);
 
     private:
 
