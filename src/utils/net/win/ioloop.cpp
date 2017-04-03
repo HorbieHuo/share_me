@@ -19,7 +19,12 @@ IOLoop::IOLoop() {
   memset(m_thread, 0, sizeof(m_thread));
 }
 
-IOLoop::~IOLoop() {}
+IOLoop::~IOLoop() {
+  if (m_completionPort) {
+    CloseHandle(m_completionPort);
+    m_completionPort = NULL;
+  }
+}
 
 void IOLoop::OnThreadClose() {
   if (m_threadLivedCount > 0)
@@ -90,6 +95,15 @@ DWORD _stdcall ServerWorkThread(LPVOID CompletionPortID) {
                                   (PULONG_PTR)&socket, (LPOVERLAPPED *)&pIoData,
                                   INFINITE) == 0) {
       LOG_ERROR("GetQueuedCompletionStatus error, %d", WSAGetLastError());
+      LOG_INFO("socket 0x%X  pIoData 0x%X", socket, pIoData);
+      if (pIoData && socket) {
+        if (socket->GetSocketType() == Socket::ACCEPT) {
+          LOG_INFO("socket handle 0x%X", socket->GetHandle());
+          delete socket;
+          delete pIoData;
+        }
+        continue;
+      }
       break;
     }
 
@@ -98,10 +112,10 @@ DWORD _stdcall ServerWorkThread(LPVOID CompletionPortID) {
       break;
     }
 
-    if (bytesTransferred == 0 && socket->GetSocketType() == Socket::ACCEPT) {
+    if (bytesTransferred == 0) {
       LOG_INFO("socket accept close, 0x%X", socket->GetHandle());
-      delete socket;
       delete pIoData;
+      delete socket;
       continue;
     }
 
@@ -191,14 +205,6 @@ bool IOLoop::AddServerSocket(Socket *socket) {
     return false;
   }
   return socket->PostAcceptMsg();
-  // LPPER_IO_DATA perIoData = new PER_IO_DATA;
-  // memset(&(perIoData->overlapped), sizeof(OVERLAPPED), 0);
-  // perIoData->databuff.len = DATA_BUF_SIZE;
-  // perIoData->databuff.buf = perIoData->buffer;
-  // perIoData->operationType = START_ACCEPT;
-  // PostQueuedCompletionStatus(m_completionPort, (DWORD)sizeof(int),
-  //                            (ULONG_PTR)socket, (LPOVERLAPPED)perIoData);
-  // return true;
 }
 
 bool IOLoop::AddClientSocket(Socket *socket) {

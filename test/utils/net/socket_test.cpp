@@ -77,6 +77,7 @@ TEST_F(SocketUnittest, socket_send_and_recieve) {
   Sleep(10);
   EXPECT_STREQ("12345", recvStr);
   // EXPECT_TRUE(m_sockets[1]->PostSendMsg("0", 0));
+  // m_sockets[1] = nullptr;
   // Sleep(10);
 }
 

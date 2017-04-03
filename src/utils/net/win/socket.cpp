@@ -37,6 +37,7 @@ Socket::~Socket() {
   LOG_INFO("socket handle 0x%X", m_socketHandle);
   if (m_socketHandle) {
     closesocket(m_socketHandle);
+    // shutdown(m_socketHandle, SHUT_RDWR);
   }
 }
 
@@ -175,8 +176,10 @@ bool Socket::PostSendMsg(void *data, size_t length) {
   perIoData->dataOpretedLen = 0;
   if (WSASend(m_socketHandle, &(perIoData->databuff), 1, &sendBytes, 0,
               &(perIoData->overlapped), NULL) == SOCKET_ERROR) {
-    if (WSAGetLastError() != ERROR_IO_PENDING)
+    if (WSAGetLastError() != ERROR_IO_PENDING) {
+      LOG_ERROR("socket send msg error, %d", WSAGetLastError());
       return false;
+    }
   }
   return true;
 }
