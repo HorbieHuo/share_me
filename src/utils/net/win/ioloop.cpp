@@ -1,4 +1,5 @@
 #include "ioloop.h"
+#include <iostream>
 
 namespace share_me_utils {
 
@@ -23,11 +24,14 @@ IOLoop::~IOLoop() {}
 void IOLoop::OnThreadClose() {
   if (m_threadLivedCount > 0)
     InterlockedExchangeAdd(&m_threadLivedCount, -1);
+  LOG_INFO("thread %ld destroy", m_threadLivedCount);
+  std::cout << "thread " << m_threadLivedCount << " destroy" << std::endl;
 }
 
 long IOLoop::GetThreadLivedCount() { return m_threadLivedCount; }
 
 bool IOLoop::Init() {
+  m_threadLivedCount = 0;
   m_completionPort = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
   if (!m_completionPort)
     return false;
@@ -46,6 +50,8 @@ bool IOLoop::Init() {
       return false;
     }
     ++m_threadLivedCount;
+    LOG_INFO("thread %ld created", m_threadLivedCount);
+    std::cout << "thread " << m_threadLivedCount << " created" << std::endl;
     CloseHandle(threadHandle);
   }
   return true;
@@ -67,6 +73,7 @@ void IOLoop::Release() {
   if (m_io)
     delete m_io;
   m_io = NULL;
+  LOG_INFO("IOLoop resource release success");
 }
 
 DWORD _stdcall ServerWorkThread(LPVOID CompletionPortID) {
@@ -96,9 +103,9 @@ DWORD _stdcall ServerWorkThread(LPVOID CompletionPortID) {
       if (socket == NULL)
         continue;
       // if (CloseHandle((HANDLE)socket->GetHandle()) == SOCKET_ERROR) {
-        // std::cout<< "Close socket failed. Error:"<< GetLastError()<<
-        // std::endl;
-        // return 0;
+      // std::cout<< "Close socket failed. Error:"<< GetLastError()<<
+      // std::endl;
+      // return 0;
       // }
 
       delete socket;
@@ -106,50 +113,52 @@ DWORD _stdcall ServerWorkThread(LPVOID CompletionPortID) {
       continue;
     }
 
-    switch (pIoData->operationType)
-    {
-      case SEND: {
-        if (WSASend(socket->GetHandle(), &(pIoData->databuff), 1, &bytesTransferred, 0,
-              &(pIoData->overlapped), NULL) == SOCKET_ERROR) {
-          if (WSAGetLastError() != ERROR_IO_PENDING) {
-            LOG_ERROR("can not send, socket exit");
-            delete socket;
-            delete pIoData;
-          }
-        }
-        break;
-      }
-      case RECV: {
-        if (socket->OnRecvMsg(pIoData->databuff.buf, pIoData->databuff.len)) {
-          if (!socket->PostRecvMsg(pIoData)) {
-            LOG_ERROR("can not recv, socket exit");
-            delete socket;
-            delete pIoData;
-          }
-        } else {
+    switch (pIoData->operationType) {
+    case SEND: {
+      if (WSASend(socket->GetHandle(), &(pIoData->databuff), 1,
+                  &bytesTransferred, 0, &(pIoData->overlapped),
+                  NULL) == SOCKET_ERROR) {
+        if (WSAGetLastError() != ERROR_IO_PENDING) {
+          LOG_ERROR("can not send, socket exit");
           delete socket;
           delete pIoData;
         }
-        break;
       }
-      case START_ACCEPT: {
-        socket->PostAcceptMsg();
-        if (!pIoData->socketForAccept) break;
-        socket = pIoData->socketForAccept;
-        if (socket->OnAcceptSocket(pIoData)) {
-          socket->PostRecvMsg(nullptr);
+      break;
+    }
+    case RECV: {
+      if (socket->OnRecvMsg(pIoData->databuff.buf, pIoData->databuff.len)) {
+        if (!socket->PostRecvMsg(pIoData)) {
+          LOG_ERROR("can not recv, socket exit");
+          delete socket;
+          delete pIoData;
         }
+      } else {
+        delete socket;
         delete pIoData;
-        break;
       }
-      case END_THREAD: {
-        LOG_ERROR("END_THREAD msg error");
+      break;
+    }
+    case START_ACCEPT: {
+      socket->PostAcceptMsg();
+      if (!pIoData->socketForAccept)
         break;
+      Socket *acceptedSocket = pIoData->socketForAccept;
+      if (acceptedSocket->OnAcceptSocket(pIoData)) {
+        acceptedSocket->SetDataHandleFunc(socket->GetDataHandleFunc());
+        acceptedSocket->PostRecvMsg(nullptr);
       }
-      default: {
-        LOG_ERROR("unkwon type = %d", pIoData->operationType);
-        break;
-      }
+      delete pIoData;
+      break;
+    }
+    case END_THREAD: {
+      LOG_ERROR("END_THREAD msg error");
+      break;
+    }
+    default: {
+      LOG_ERROR("unkwon type = %d", pIoData->operationType);
+      break;
+    }
     }
 
     // socket->OnRecvMsg(pIoData->databuff.buf, pIoData->databuff.len);

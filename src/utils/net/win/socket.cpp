@@ -10,6 +10,7 @@ Socket::Socket(int port) {
   m_addr.sin_family = AF_INET;
   m_addr.sin_addr.S_un.S_addr = htonl(INADDR_ANY);
   m_addr.sin_port = htons(port);
+  m_port = port;
   m_socketType = SERVER;
 }
 
@@ -30,6 +31,10 @@ bool Socket::SetDataHandleFunc(DataHandleCallback func) {
   return true;
 }
 
+DataHandleCallback Socket::GetDataHandleFunc() {
+  return m_dataHandleCallback;
+}
+
 Socket::~Socket() {
   if (m_socketHandle) {
     closesocket(m_socketHandle);
@@ -37,13 +42,18 @@ Socket::~Socket() {
 }
 
 bool Socket::init() {
-  if (m_socketType >= MAX_INVALID || m_socketType <= MIN_INVALID)
+  if (m_socketType >= MAX_INVALID || m_socketType <= MIN_INVALID) {
+    LOG_ERROR("socket type errro, %d", m_socketType);
     return false;
-  if (m_port <= 0)
+  }
+  if (m_port <= 0) {
+   LOG_ERROR("socket port errro, %d", m_port);
     return false;
+  }
 
   WSADATA ws;
   if (WSAStartup(MAKEWORD(2, 2), &ws) != 0) {
+    LOG_ERROR("WSAStartup fail, %d", GetLastError());
     return false;
   }
   m_socketHandle =
@@ -51,18 +61,23 @@ bool Socket::init() {
   getAcceptExFunc();
   if (m_socketType == CLIENT) {
     if (connect(m_socketHandle, (SOCKADDR *)&m_addr, sizeof(m_addr)) != 0) {
+      LOG_ERROR("socket connet fail, %d", GetLastError());
       return false;
     }
   } else if (m_socketType == SERVER) {
     if (SOCKET_ERROR ==
         bind(m_socketHandle, (struct sockaddr *)&m_addr, sizeof(m_addr))) {
+      LOG_ERROR("socket bind fail, %d", GetLastError());
       return false;
     }
-    if (listen(m_socketHandle, 10) != 0)
+    if (listen(m_socketHandle, 10) != 0) {
+      LOG_ERROR("socket listen fail, %d", GetLastError());
       return false;
+    }
   } else if (m_socketType == ACCEPT) {
     // nothing to do
   } else {
+    LOG_ERROR("socket error type fail");
     return false;
   }
   return true;
@@ -83,10 +98,14 @@ bool Socket::getAcceptExFunc() {
 }
 
 bool Socket::Start() {
-  if (!init())
+  if (!init()) {
+    LOG_ERROR("socket init fail, %d", GetLastError());
     return false;
-  if (!m_socketHandle)
+  }
+  if (!m_socketHandle) {
+    LOG_ERROR("socket handle = NULL fail, %d", GetLastError());
     return false;
+  }
   // IOLoop *io = IOLoop::Instanse();
   // if (!io)
   //   return false;
@@ -98,10 +117,14 @@ bool Socket::Start() {
 }
 
 bool Socket::PostAcceptMsg() {
-  if (m_socketType != SERVER)
+  if (m_socketType != SERVER) {
+    LOG_ERROR("socket type error %d", m_socketType);
     return false;
-  if (!Socket::m_acceptExFunc)
+  }
+  if (!Socket::m_acceptExFunc) {
+    LOG_ERROR("socket acceptEx func pointer is NULL");
     return false;
+  }
   DWORD dwBytes = 0;
   LPPER_IO_DATA perIoData = new PER_IO_DATA;
   memset(&(perIoData->overlapped), 0, sizeof(OVERLAPPED));

@@ -4,7 +4,8 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <string>
-#include "Mswsock.h"
+#include <Mswsock.h>
+#include <log.h>
 
 #include "../isocket.h"
 #include "ioloop.h"
@@ -25,6 +26,7 @@ class Socket: public ISocket {
         virtual bool Start();
 
         virtual bool SetDataHandleFunc(DataHandleCallback func);
+        virtual DataHandleCallback GetDataHandleFunc();
 
         virtual bool PostAcceptMsg();
         virtual bool PostSendMsg(void* data, size_t length);

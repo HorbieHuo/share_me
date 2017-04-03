@@ -12,12 +12,26 @@ TEST(FooTest, HandleNoneZeroInput) {
 
 #define SOCKET_CONTINER_CAPACITY 10
 
+char *testStr;
+char recvStr[1024];
+
+bool DataCallback(char *data, int length) {
+  if (!data || length <= 0)
+    return false;
+  int expectlen = length <= 1000 ? length : 1000;
+  memcpy(recvStr, data, expectlen);
+  LOG_DEBUG("recv msg: %s", recvStr);
+  return true;
+}
+
 class SocketUnittest : public testing::Test {
 protected:
   virtual void SetUp() {
     std::cout << "SocketUnittest SetUp ..." << std::endl;
     m_io = NULL;
+    testStr = "hello";
     memset(m_sockets, 0, sizeof(m_sockets));
+    memset(recvStr, 0, sizeof(recvStr));
   }
   virtual void TearDown() {
     std::cout << "SocketUnittest TearDown ..." << std::endl;
@@ -45,9 +59,18 @@ TEST_F(SocketUnittest, socket_send_and_recieve) {
   ASSERT_NE(nullptr, m_io);
   ASSERT_TRUE(m_io->Init());
   m_sockets[0] = new Socket(9999);
+  m_sockets[0]->SetDataHandleFunc(DataCallback);
   ASSERT_NE(nullptr, m_sockets[0]);
   ASSERT_TRUE(m_sockets[0]->Start());
   ASSERT_TRUE(m_io->AddServerSocket(m_sockets[0]));
+
+  m_sockets[1] = new Socket("127.0.0.1", 9999, Socket::CLIENT);
+  ASSERT_NE(nullptr, m_sockets[1]);
+  ASSERT_TRUE(m_sockets[1]->Start());
+  ASSERT_TRUE(m_io->AddClientSocket(m_sockets[1]));
+  EXPECT_TRUE(m_sockets[1]->PostSendMsg(testStr, 5));
+  Sleep(1000);
+  ASSERT_STREQ(testStr, recvStr);
 }
 
 int main(int argc, char *argv[]) {
