@@ -8,6 +8,10 @@ public:
   Json(const Json &other);
   ~Json();
   Json &operator=(const Json &other);
+
+  private:
+  char* m_text;
+  size_t m_textLength;
 };
 
 class Value {
