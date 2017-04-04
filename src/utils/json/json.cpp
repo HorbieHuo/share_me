@@ -25,14 +25,23 @@ Json &Json::operator=(const Json &other) {
   if (this == &other)
     return *this;
   Json tmp(other);
-  char* text = tmp.m_text;
+  char *text = tmp.m_text;
   tmp.m_text = m_text;
   m_text = text;
   size_t textLength = other.m_textLength;
-  other.m_textLength; = m_textLength;
+  other.m_textLength = m_textLength;
   m_textLength = textLength;
   return *this;
 }
+
+bool Json::Paser() {
+  if (!m_text || m_textLength <= 0) {
+    return false;
+  }
+  return true;
+}
+
+// ----------------------------------------
 
 Value::Value() {}
 Value::Value(const Value &other) {}

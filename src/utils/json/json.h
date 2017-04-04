@@ -9,8 +9,10 @@ public:
   ~Json();
   Json &operator=(const Json &other);
 
-  private:
-  char* m_text;
+  bool Paser();
+
+private:
+  char *m_text;
   size_t m_textLength;
 };
 
