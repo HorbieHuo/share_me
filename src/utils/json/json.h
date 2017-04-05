@@ -14,6 +14,14 @@ public:
 private:
   char *m_text;
   size_t m_textLength;
+
+  private:
+  class StateMachine {
+    public:
+    StateMachine();
+    ~StateMachine();
+    Value* Next(const char& c);
+  };
 };
 
 class Value {
@@ -22,6 +30,10 @@ public:
   Value(const Value &other);
   ~Value();
   Value &operator=(const Value &other);
+
+private:
+  Value *m_children;
+  Value* parent;
 }
 }
 
