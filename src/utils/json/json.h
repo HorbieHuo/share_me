@@ -14,14 +14,7 @@ public:
 private:
   char *m_text;
   size_t m_textLength;
-
-  private:
-  class StateMachine {
-    public:
-    StateMachine();
-    ~StateMachine();
-    Value* Next(const char& c);
-  };
+  
 };
 
 class Value {
