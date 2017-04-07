@@ -6,6 +6,8 @@ namespace json_inner {
 StateMachine::StateMachine() { init(); }
 StateMachine::~StateMachine() {}
 bool StateMachine::init() {
+  m_currentState = 0;
+  memset(m_currentStateDeep, 0, sizeof(m_currentStateDeep));
   m_deep = 0;
   m_charMap.Clear();
   m_charMap.Set('{');
@@ -20,39 +22,69 @@ bool StateMachine::init() {
 int StateMachine::Next(const char &c) {
   if (!m_charMap[c])
     return 0;
-switch (c) {
-    case '{': {
-        break;
-    }
-    case '}': {
-        break;
-    }
-    case '[': {
-        break;
-    }
-    case ']': {
-        break;
-    }
-    case ',': {
-        break;
-    }
-    case ':': {
-        break;
-    }
-    case '"': {
-        break;
-    }
-    default: {
-        return 0;
-    }
-}
+  switch (c) {
+  case '{': {
+    break;
+  }
+  case '}': {
+    break;
+  }
+  case '[': {
+    break;
+  }
+  case ']': {
+    break;
+  }
+  case ',': {
+    break;
+  }
+  case ':': {
+    break;
+  }
+  case '"': {
+    break;
+  }
+  default: { return 0; }
+  }
   return 0;
 }
 
-int StateMachine::onIntoObject() { return 0; }
-int StateMachine::onOutObject() { return 0; }
-int StateMachine::onIntoArray() { return 0; }
-int StateMachine::onOutArray() { return 0; }
+int StateMachine::onIntoObject() {
+  if (m_currentState & OUT_ELEM) {
+    m_currentState |= OBJECT;
+    ++m_currentStateDeep[OBJECT_POS];
+    return OBJECT;
+  }
+  return 0;
+}
+int StateMachine::onOutObject() {
+  if (m_currentState & (OUT_ELEM | OBJECT)) {
+    --m_currentStateDeep[OBJECT_POS];
+    if (m_currentStateDeep[OBJECT_POS] == 0) {
+      m_currentState &= ~OBJECT;
+    }
+    return OUT_ELEM;
+  }
+  return 0;
+}
+int StateMachine::onIntoArray() {
+  if (m_currentState & OUT_ELEM) {
+    m_currentState |= ARRAY;
+    ++m_currentStateDeep[ARRAY_POS];
+    return ARRAY;
+  }
+  return 0;
+}
+int StateMachine::onOutArray() {
+  if (m_currentState & (OUT_ELEM | ARRAY)) {
+    --m_currentStateDeep[ARRAY_POS];
+    if (m_currentStateDeep[ARRAY_POS] == 0) {
+      m_currentState &= ~ARRAY;
+    }
+    return OUT_ELEM;
+  }
+  return 0;
+}
 int StateMachine::onNextElement() { return 0; }
 
 // ----------------------

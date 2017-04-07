@@ -6,16 +6,28 @@ namespace json_inner {
 #define STATE_DIVIDE_ACTION
 class StateMachine {
 public:
+
+  enum STATE_POS {
+    OBJECT_POS = 0,
+    ARRAY_POS = 1,
+    KEY_ELEM_POS = 2,
+    VALUE_ELEM_POS = 3,
+    STR_ELEM_POS = 4,
+    NUM_ELEM_POS = 5,
+    IN_ELEM_POS = 6,
+    OUT_ELEM_POS = 7,
+    TOP_STATE_POS = 8,
+  }
   enum STATE {
-    OBJECT = 1 << 0,
-    ARRAY = 1 << 1,
-    KEY_ELEM = 1 << 2,
-    VALUE_ELEM = 1 << 3,
-    STR_ELEM = 1 << 4,
-    NUM_ELEM = 1 << 5,
-    IN_ELEM = 1 << 6,
-    OUT_ELEM = 1 << 7,
-    TOP_STATE = 1 << 8,
+    OBJECT = 1 << OBJECT_POS,
+    ARRAY = 1 << ARRAY_POS,
+    KEY_ELEM = 1 << KEY_ELEM_POS,
+    VALUE_ELEM = 1 << VALUE_ELEM_POS,
+    STR_ELEM = 1 << STR_ELEM_POS,
+    NUM_ELEM = 1 << NUM_ELEM_POS,
+    IN_ELEM = 1 << IN_ELEM_POS,
+    OUT_ELEM = 1 << OUT_ELEM_POS,
+    TOP_STATE = 1 << TOP_STATE_POS,
   };
 
   enum ACTION {
@@ -42,6 +54,8 @@ private:
 private:
   size_t m_deep;
   CharMap m_charMap;
+  int m_currentState;
+  int m_currentStateDeep[TOP_STATE_POS];
 };
 
 class CharMap {
