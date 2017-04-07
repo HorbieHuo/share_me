@@ -51,6 +51,8 @@ private:
   int onOutObject();
   int onIntoArray();
   int onOutArray();
+  int onIntoElem();
+  int onOutElem();
   int onNextElement();
 
 private:
