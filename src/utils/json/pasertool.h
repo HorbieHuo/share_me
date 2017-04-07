@@ -35,7 +35,9 @@ public:
     OUT_OBJECT = TOP_STATE << 1,
     INTO_ARRAY = TOP_STATE << 2,
     OUT_ARRAY = TOP_STATE << 3,
-    NEXT_ELEM = TOP_STATE << 4,
+    INTO_ELEM = TOP_STATE << 4,
+    OUT_ELEM = TOP_STATE << 5,
+    NEXT_ELEM = TOP_STATE << 6,
   };
 
 public:

@@ -53,7 +53,7 @@ int StateMachine::onIntoObject() {
   if (m_currentState & OUT_ELEM) {
     m_currentState |= OBJECT;
     ++m_currentStateDeep[OBJECT_POS];
-    return OBJECT;
+    return INTO_OBJECT;
   }
   return 0;
 }
@@ -63,7 +63,7 @@ int StateMachine::onOutObject() {
     if (m_currentStateDeep[OBJECT_POS] == 0) {
       m_currentState &= ~OBJECT;
     }
-    return OUT_ELEM;
+    return OUT_OBJECT;
   }
   return 0;
 }
@@ -71,7 +71,7 @@ int StateMachine::onIntoArray() {
   if (m_currentState & OUT_ELEM) {
     m_currentState |= ARRAY;
     ++m_currentStateDeep[ARRAY_POS];
-    return ARRAY;
+    return INTO_ARRAY;
   }
   return 0;
 }
@@ -81,11 +81,16 @@ int StateMachine::onOutArray() {
     if (m_currentStateDeep[ARRAY_POS] == 0) {
       m_currentState &= ~ARRAY;
     }
-    return OUT_ELEM;
+    return OUT_ARRAY;
   }
   return 0;
 }
-int StateMachine::onNextElement() { return 0; }
+int StateMachine::onNextElement() {
+  if (m_currentState & (OUT_ELEM | ARRAY | OBJECT)) {
+    return NEXT_ELEM;
+  }
+  return 0;
+}
 
 // ----------------------
 CharMap::CharMap() {}
