@@ -47,6 +47,7 @@ public:
 
 private:
   bool init();
+  bool has(const STATE& s);
   int onIntoObject();
   int onOutObject();
   int onIntoArray();

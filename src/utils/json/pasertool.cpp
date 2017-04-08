@@ -19,6 +19,11 @@ bool StateMachine::init() {
   m_charMap.Set('"');
   return true;
 }
+
+bool has(const STATE& s) {
+    return m_currentState & s == 0;
+}
+
 int StateMachine::Next(const char &c) {
   if (!m_charMap[c])
     return 0;
@@ -85,6 +90,18 @@ int StateMachine::onOutArray() {
   }
   return 0;
 }
+  int StateMachine::onIntoElement() {
+      if (has(OUT_ELEM) && has(ARRAY)) {
+          m_currentState &= ~OUT_ELEM;
+          m_currentState |= STR_ELEM;
+      } else if (m_currentState & (OUT_ELEM | OBJECT | KEY_ELEM)) {
+          m_currentState &= ~OUT_ELEM;
+          m_currentState |= STR_ELEM;
+      }
+  }
+  int StateMachine::onOutElement() {
+      return 0;
+  }
 int StateMachine::onNextElement() {
   if (m_currentState & (OUT_ELEM | ARRAY | OBJECT)) {
     return NEXT_ELEM;
