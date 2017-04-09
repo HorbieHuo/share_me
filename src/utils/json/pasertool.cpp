@@ -47,26 +47,38 @@ void StateMachine::reducePosDeep(const STATE_POS &pos) {
 int StateMachine::Next(const char &c) {
   if (!m_charMap[c])
     return 0;
+  int action = 0;
   switch (c) {
   case '{': {
+    action = onIntoObject();
     break;
   }
   case '}': {
+    action = onOutObject();
     break;
   }
   case '[': {
+    action = onIntoArray();
     break;
   }
   case ']': {
+    action = onOutArray();
     break;
   }
   case ',': {
+    action = onNextElement();
     break;
   }
   case ':': {
+    action = onNextElement();
     break;
   }
   case '"': {
+    if (has(IN_ELEM)) {
+      action = onOutElement();
+    } else {
+      action = onIntoElement();
+    }
     break;
   }
   default: { return 0; }
