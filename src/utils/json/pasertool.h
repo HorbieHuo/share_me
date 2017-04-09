@@ -4,6 +4,20 @@
 namespace share_me_utils {
 namespace json_inner {
 #define STATE_DIVIDE_ACTION
+
+	class CharMap {
+	public:
+		CharMap();
+		~CharMap();
+		void Clear();
+		bool Set(const char &c);
+
+		bool operator[](const char &c);
+
+	private:
+		char m_map[32];
+	};
+
 class StateMachine {
 public:
   enum STATE_POS {
@@ -39,13 +53,13 @@ public:
 public:
   StateMachine();
   ~StateMachine();
-  Value *Next(const char &c);
+  int Next(const char &c);
 
 private:
   bool init();
   bool has(const STATE &s);
-  void addPosDeep(const STATE_POS& pos);
-  void reducePosDeep(const STATE_POS& pos);
+  void addPosDeep(const int& pos);
+  void reducePosDeep(const int& pos);
   int onIntoObject();
   int onOutObject();
   int onIntoArray();
@@ -61,18 +75,7 @@ private:
   int m_currentStateDeep[TOP_STATE_POS];
 };
 
-class CharMap {
-public:
-  CharMap();
-  ~CharMap();
-  void Clear();
-  bool Set(const char &c);
 
-  bool operator[](const char &c);
-
-private:
-  char m_map[32];
-};
 }
 }
 

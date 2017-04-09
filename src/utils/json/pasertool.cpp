@@ -1,3 +1,5 @@
+#include <memory.h>
+#include <assert.h>
 #include "pasertool.h"
 
 namespace share_me_utils {
@@ -20,9 +22,9 @@ bool StateMachine::init() {
   return true;
 }
 
-bool StateMachine::has(const STATE &s) { return m_currentState & s != 0; }
+bool StateMachine::has(const STATE &s) { return (m_currentState & s) != 0; }
 
-void StateMachine::addPosDeep(const STATE_POS &pos) {
+void StateMachine::addPosDeep(const int &pos) {
   if (pos >= 0 && pos < TOP_STATE_POS) {
     ++m_currentStateDeep[pos];
     assert(m_currentStateDeep[pos] >= 0);
@@ -33,7 +35,7 @@ void StateMachine::addPosDeep(const STATE_POS &pos) {
   assert(0);
 }
 
-void StateMachine::reducePosDeep(const STATE_POS &pos) {
+void StateMachine::reducePosDeep(const int &pos) {
   if (pos >= 0 && pos < TOP_STATE_POS) {
     --m_currentStateDeep[pos];
     assert(m_currentStateDeep[pos] >= 0);
@@ -178,5 +180,12 @@ CharMap::~CharMap() {}
 void CharMap::Clear() { memset(m_map, 0, sizeof(m_map)); }
 
 bool CharMap::operator[](const char &c) { return true; }
+
+bool CharMap::Set(const char &c) {
+	int charPos = c / 4 + 1;
+	int offsetPos = c % 4;
+	m_map[charPos] |= 1 << offsetPos;
+	return true;
+}
 }
 }
