@@ -44,6 +44,8 @@ public:
 private:
   bool init();
   bool has(const STATE &s);
+  void addPosDeep(const STATE_POS& pos);
+  void reducePosDeep(const STATE_POS& pos);
   int onIntoObject();
   int onOutObject();
   int onIntoArray();

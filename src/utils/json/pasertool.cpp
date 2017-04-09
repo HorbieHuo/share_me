@@ -20,7 +20,29 @@ bool StateMachine::init() {
   return true;
 }
 
-bool has(const STATE &s) { return m_currentState & s != 0; }
+bool StateMachine::has(const STATE &s) { return m_currentState & s != 0; }
+
+void StateMachine::addPosDeep(const STATE_POS &pos) {
+  if (pos >= 0 && pos < TOP_STATE_POS) {
+    ++m_currentStateDeep[pos];
+    assert(m_currentStateDeep[pos] >= 0);
+    assert(m_currentStateDeep[IN_ELEM] == 0 ||
+           m_currentStateDeep[IN_ELEM] == 1);
+    return;
+  }
+  assert(0);
+}
+
+void StateMachine::reducePosDeep(const STATE_POS &pos) {
+  if (pos >= 0 && pos < TOP_STATE_POS) {
+    --m_currentStateDeep[pos];
+    assert(m_currentStateDeep[pos] >= 0);
+    assert(m_currentStateDeep[IN_ELEM] == 0 ||
+           m_currentStateDeep[IN_ELEM] == 1);
+    return;
+  }
+  assert(0);
+}
 
 int StateMachine::Next(const char &c) {
   if (!m_charMap[c])
@@ -55,14 +77,14 @@ int StateMachine::Next(const char &c) {
 int StateMachine::onIntoObject() {
   if (has(OUT_ELEM)) {
     m_currentState |= OBJECT;
-    ++m_currentStateDeep[OBJECT_POS];
+    addPosDeep(OBJECT_POS);
     return INTO_OBJECT;
   }
   return 0;
 }
 int StateMachine::onOutObject() {
   if (has(OUT_ELEM) && has(OBJECT)) {
-    --m_currentStateDeep[OBJECT_POS];
+    reducePosDeep(OBJECT_POS);
     if (m_currentStateDeep[OBJECT_POS] == 0) {
       m_currentState &= ~OBJECT;
     }
@@ -73,14 +95,14 @@ int StateMachine::onOutObject() {
 int StateMachine::onIntoArray() {
   if (has(OUT_ELEM) && has(VALUE_ELEM) && has(OBJECT)) {
     m_currentState |= ARRAY;
-    ++m_currentStateDeep[ARRAY_POS];
+    addPosDeep(ARRAY_POS);
     return INTO_ARRAY;
   }
   return 0;
 }
 int StateMachine::onOutArray() {
   if (m_currentState & (OUT_ELEM | ARRAY)) {
-    --m_currentStateDeep[ARRAY_POS];
+    reducePosDeep(ARRAY_POS);
     if (m_currentStateDeep[ARRAY_POS] == 0) {
       m_currentState &= ~ARRAY;
     }
@@ -92,6 +114,7 @@ int StateMachine::onIntoElement() {
   if (has(OUT_ELEM) && (has(ARRAY) || has(OBJECT))) {
     m_currentState &= ~OUT_ELEM;
     m_currentState |= IN_ELEM;
+    addPosDeep(IN_ELEM);
     return INTO_ELEM;
   }
   return 0;
@@ -100,6 +123,7 @@ int StateMachine::onOutElement() {
   if (has(IN_ELEM)) {
     m_currentState &= ~IN_ELEM;
     m_currentState |= OUT_ELEM;
+    reducePosDeep(IN_ELEM);
     return GET_OUT_ELEM;
   }
   return 0;
