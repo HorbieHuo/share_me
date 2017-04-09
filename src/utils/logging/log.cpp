@@ -14,9 +14,44 @@ Log::Log() {
   m_levelString[S_TRACE] = "TRACE";
   m_levelString[S_DEBUG] = "DEBUG";
   m_levelString[S_INFO] = "INFO";
+  m_levelString[S_WARN] = "WARN";
   m_levelString[S_ERROR] = "ERROR";
   m_levelString[S_FATAL] = "FATAL";
   SetPrefix("%d %t %F %f %l");
+  initColor();
+}
+
+bool Log::initColor() {
+  memset(m_levelColor, 0, sizeof(m_levelColor));
+  HANDLE stdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+  CONSOLE_SCREEN_BUFFER_INFO csbiInfo;
+  GetConsoleScreenBufferInfo(stdHandle, &csbiInfo);
+  m_oldColorAttr = csbiInfo.wAttributes;
+  m_levelColor[S_TRACE] = FOREGROUND_BLUE | FOREGROUND_INTENSITY;
+  m_levelColor[S_DEBUG] = m_oldColorAttr | FOREGROUND_INTENSITY;
+  m_levelColor[S_INFO] = FOREGROUND_GREEN | FOREGROUND_INTENSITY;
+  m_levelColor[S_WARN] = FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_INTENSITY;
+  m_levelColor[S_ERROR] = FOREGROUND_RED | FOREGROUND_INTENSITY;
+  m_levelColor[S_FATAL] = FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY;
+  return true;
+}
+
+void Log::setColor(int level) {
+  static HANDLE stdHandle = NULL;
+  if (level >= S_TRACE && level < S_INVALID) {
+    if (!stdHandle) {
+      stdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+    }
+    SetConsoleTextAttribute(stdHandle, m_levelColor[level]);
+  }
+}
+
+void Log::resetColor() {
+  static HANDLE stdHandle = NULL;
+  if (!stdHandle) {
+    stdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+  }
+  SetConsoleTextAttribute(stdHandle, m_oldColorAttr);
 }
 
 Log *Log::Instance() {
@@ -81,7 +116,9 @@ void Log::LogContent(const char *filename, const int lineno,
   }
   m_logBuffer[offset] = '\n';
   m_logBuffer[offset + 1] = '\0';
+  setColor(level);
   fprintf(stdout, "%s", m_logBuffer);
+  resetColor();
 }
 
 int Log::generatePrefix(const char *filename, const char *funcname,
