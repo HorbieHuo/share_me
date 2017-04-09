@@ -20,9 +20,7 @@ bool StateMachine::init() {
   return true;
 }
 
-bool has(const STATE& s) {
-    return m_currentState & s == 0;
-}
+bool has(const STATE &s) { return m_currentState & s != 0; }
 
 int StateMachine::Next(const char &c) {
   if (!m_charMap[c])
@@ -55,7 +53,7 @@ int StateMachine::Next(const char &c) {
 }
 
 int StateMachine::onIntoObject() {
-  if (m_currentState & OUT_ELEM) {
+  if (has(OUT_ELEM)) {
     m_currentState |= OBJECT;
     ++m_currentStateDeep[OBJECT_POS];
     return INTO_OBJECT;
@@ -63,17 +61,17 @@ int StateMachine::onIntoObject() {
   return 0;
 }
 int StateMachine::onOutObject() {
-  if (m_currentState & (OUT_ELEM | OBJECT)) {
+  if (has(OUT_ELEM) && has(OBJECT)) {
     --m_currentStateDeep[OBJECT_POS];
     if (m_currentStateDeep[OBJECT_POS] == 0) {
       m_currentState &= ~OBJECT;
     }
-    return OUT_OBJECT;
+    return GET_OUT_OBJECT;
   }
   return 0;
 }
 int StateMachine::onIntoArray() {
-  if (m_currentState & OUT_ELEM) {
+  if (has(OUT_ELEM) && has(VALUE_ELEM) && has(OBJECT)) {
     m_currentState |= ARRAY;
     ++m_currentStateDeep[ARRAY_POS];
     return INTO_ARRAY;
@@ -86,24 +84,39 @@ int StateMachine::onOutArray() {
     if (m_currentStateDeep[ARRAY_POS] == 0) {
       m_currentState &= ~ARRAY;
     }
-    return OUT_ARRAY;
+    return GET_OUT_ARRAY;
   }
   return 0;
 }
-  int StateMachine::onIntoElement() {
-      if (has(OUT_ELEM) && has(ARRAY)) {
-          m_currentState &= ~OUT_ELEM;
-          m_currentState |= STR_ELEM;
-      } else if (m_currentState & (OUT_ELEM | OBJECT | KEY_ELEM)) {
-          m_currentState &= ~OUT_ELEM;
-          m_currentState |= STR_ELEM;
-      }
+int StateMachine::onIntoElement() {
+  if (has(OUT_ELEM) && (has(ARRAY) || has(OBJECT))) {
+    m_currentState &= ~OUT_ELEM;
+    m_currentState |= IN_ELEM;
+    return INTO_ELEM;
   }
-  int StateMachine::onOutElement() {
-      return 0;
+  return 0;
+}
+int StateMachine::onOutElement() {
+  if (has(IN_ELEM)) {
+    m_currentState &= ~IN_ELEM;
+    m_currentState |= OUT_ELEM;
+    return GET_OUT_ELEM;
   }
+  return 0;
+}
 int StateMachine::onNextElement() {
-  if (m_currentState & (OUT_ELEM | ARRAY | OBJECT)) {
+  if (has(OUT_ELEM) && has(ARRAY) && has(OBJECT)) {
+    return NEXT_ELEM;
+  } else if (has(OUT_ELEM) && !has(ARRAY) && has(OBJECT)) {
+    if (has(VALUE_ELEM)) {
+      m_currentState &= ~VALUE_ELEM;
+      m_currentState |= KEY_ELEM;
+    } else if (has(KEY_ELEM)) {
+      m_currentState &= ~KEY_ELEM;
+      m_currentState |= VALUE_ELEM;
+    } else {
+      return NEXT_OBJECT;
+    }
     return NEXT_ELEM;
   }
   return 0;

@@ -6,7 +6,6 @@ namespace json_inner {
 #define STATE_DIVIDE_ACTION
 class StateMachine {
 public:
-
   enum STATE_POS {
     OBJECT_POS = 0,
     ARRAY_POS = 1,
@@ -17,7 +16,7 @@ public:
     IN_ELEM_POS = 6,
     OUT_ELEM_POS = 7,
     TOP_STATE_POS = 8,
-  }
+  };
   enum STATE {
     OBJECT = 1 << OBJECT_POS,
     ARRAY = 1 << ARRAY_POS,
@@ -32,12 +31,13 @@ public:
 
   enum ACTION {
     INTO_OBJECT = TOP_STATE << 0,
-    OUT_OBJECT = TOP_STATE << 1,
+    GET_OUT_OBJECT = TOP_STATE << 1,
     INTO_ARRAY = TOP_STATE << 2,
-    OUT_ARRAY = TOP_STATE << 3,
+    GET_OUT_ARRAY = TOP_STATE << 3,
     INTO_ELEM = TOP_STATE << 4,
-    OUT_ELEM = TOP_STATE << 5,
+    GET_OUT_ELEM = TOP_STATE << 5,
     NEXT_ELEM = TOP_STATE << 6,
+    NEXT_OBJECT = TOP_STATE << 7,
   };
 
 public:
@@ -47,7 +47,7 @@ public:
 
 private:
   bool init();
-  bool has(const STATE& s);
+  bool has(const STATE &s);
   int onIntoObject();
   int onOutObject();
   int onIntoArray();
