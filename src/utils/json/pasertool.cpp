@@ -141,6 +141,9 @@ int StateMachine::onOutElement() {
   return 0;
 }
 int StateMachine::onNextElement() {
+  if (!has(OUT_ELEM)) {
+    onOutElement();
+  }
   if (has(OUT_ELEM) && has(ARRAY) && has(OBJECT)) {
     return NEXT_ELEM;
   } else if (has(OUT_ELEM) && !has(ARRAY) && has(OBJECT)) {
