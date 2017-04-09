@@ -73,6 +73,7 @@ int StateMachine::Next(const char &c) {
     action = onNextElement();
     break;
   }
+  case '-':
   case '"': {
     if (has(IN_ELEM)) {
       action = onOutElement();
@@ -81,9 +82,19 @@ int StateMachine::Next(const char &c) {
     }
     break;
   }
-  default: { return 0; }
+  default: {
+    if (c >= 0 && c <= 9) {
+      if (has(IN_ELEM)) {
+        action = onOutElement();
+      } else {
+        action = onIntoElement();
+      }
+    } else {
+      return 0;
+    }
   }
-  return 0;
+  }
+  return action;
 }
 
 int StateMachine::onIntoObject() {
