@@ -1,3 +1,5 @@
+#include <memory.h>
+#include <assert.h>
 #include "pasertool.h"
 
 namespace share_me_utils {
@@ -20,9 +22,9 @@ bool StateMachine::init() {
   return true;
 }
 
-bool StateMachine::has(const STATE &s) { return m_currentState & s != 0; }
+bool StateMachine::has(const STATE &s) { return (m_currentState & s) != 0; }
 
-void StateMachine::addPosDeep(const STATE_POS &pos) {
+void StateMachine::addPosDeep(const int &pos) {
   if (pos >= 0 && pos < TOP_STATE_POS) {
     ++m_currentStateDeep[pos];
     assert(m_currentStateDeep[pos] >= 0);
@@ -33,7 +35,7 @@ void StateMachine::addPosDeep(const STATE_POS &pos) {
   assert(0);
 }
 
-void StateMachine::reducePosDeep(const STATE_POS &pos) {
+void StateMachine::reducePosDeep(const int &pos) {
   if (pos >= 0 && pos < TOP_STATE_POS) {
     --m_currentStateDeep[pos];
     assert(m_currentStateDeep[pos] >= 0);
@@ -73,6 +75,7 @@ int StateMachine::Next(const char &c) {
     action = onNextElement();
     break;
   }
+  case '-':
   case '"': {
     if (has(IN_ELEM)) {
       action = onOutElement();
@@ -81,9 +84,19 @@ int StateMachine::Next(const char &c) {
     }
     break;
   }
-  default: { return 0; }
+  default: {
+    if (c >= 0 && c <= 9) {
+      if (has(IN_ELEM)) {
+        action = onOutElement();
+      } else {
+        action = onIntoElement();
+      }
+    } else {
+      return 0;
+    }
   }
-  return 0;
+  }
+  return action;
 }
 
 int StateMachine::onIntoObject() {
@@ -141,6 +154,9 @@ int StateMachine::onOutElement() {
   return 0;
 }
 int StateMachine::onNextElement() {
+  if (!has(OUT_ELEM)) {
+    onOutElement();
+  }
   if (has(OUT_ELEM) && has(ARRAY) && has(OBJECT)) {
     return NEXT_ELEM;
   } else if (has(OUT_ELEM) && !has(ARRAY) && has(OBJECT)) {
@@ -164,5 +180,12 @@ CharMap::~CharMap() {}
 void CharMap::Clear() { memset(m_map, 0, sizeof(m_map)); }
 
 bool CharMap::operator[](const char &c) { return true; }
+
+bool CharMap::Set(const char &c) {
+	int charPos = c / 4 + 1;
+	int offsetPos = c % 4;
+	m_map[charPos] |= 1 << offsetPos;
+	return true;
+}
 }
 }

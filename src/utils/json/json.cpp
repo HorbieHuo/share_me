@@ -1,4 +1,5 @@
 #include "json.h"
+#include <memory.h>
 
 namespace share_me_utils {
 
@@ -29,7 +30,7 @@ Json &Json::operator=(const Json &other) {
   tmp.m_text = m_text;
   m_text = text;
   size_t textLength = other.m_textLength;
-  other.m_textLength = m_textLength;
+  tmp.m_textLength = m_textLength;
   m_textLength = textLength;
   return *this;
 }
