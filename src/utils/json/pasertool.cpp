@@ -26,7 +26,7 @@ bool StateMachine::init() {
   return true;
 }
 
-const CharMap &GetSpecialCharMap() { return m_charMap; }
+const CharMap &StateMachine::GetSpecialCharMap() { return m_charMap; }
 
 bool StateMachine::has(const STATE &s) { return (m_currentState & s) != 0; }
 
@@ -185,7 +185,11 @@ CharMap::CharMap() {}
 CharMap::~CharMap() {}
 void CharMap::Clear() { memset(m_map, 0, sizeof(m_map)); }
 
-bool CharMap::operator[](const char &c) { return true; }
+bool CharMap::operator[](const char &c) const {
+  int charPos = c / 4 + 1;
+  int offsetPos = c % 4;
+  return (m_map[charPos] & 1 << offsetPos) != 0;
+}
 
 bool CharMap::Set(const char &c) {
   int charPos = c / 4 + 1;

@@ -12,7 +12,7 @@ public:
   void Clear();
   bool Set(const char &c);
 
-  bool operator[](const char &c);
+  bool operator[](const char &c) const;
 
 private:
   char m_map[32];

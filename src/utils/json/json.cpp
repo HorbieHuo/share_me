@@ -41,7 +41,7 @@ bool Json::Paser() {
   }
   char *textPos = m_text;
   char prevChar = '\0';
-  json_inner::CharMap &specialCharMap = m_stateMachine.GetSpecialCharMap();
+  const json_inner::CharMap &specialCharMap = m_stateMachine.GetSpecialCharMap();
   while (*textPos != '\0') {
     if (*textPos == '{')
       break;
@@ -51,7 +51,8 @@ bool Json::Paser() {
     return false;
   int currentAction = 0;
   while (*textPos != '\0') {
-    if (specialCharMap[*textPos]) {
+    bool isSpecialChar = specialCharMap[*textPos];
+    if (isSpecialChar) {
       currentAction = m_stateMachine.Next(*textPos);
       //TODO dispatch action
     }
