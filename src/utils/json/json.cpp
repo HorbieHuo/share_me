@@ -51,8 +51,8 @@ bool Json::Paser() {
     return false;
   int currentAction = 0;
   while (*textPos != '\0') {
-    bool isSpecialChar = specialCharMap[*textPos];
-    if (isSpecialChar) {
+    // bool isSpecialChar = specialCharMap[*textPos];
+    if (specialCharMap[*textPos]) {
       currentAction = m_stateMachine.Next(*textPos);
       //TODO dispatch action
     }
