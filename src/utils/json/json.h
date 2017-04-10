@@ -15,6 +15,7 @@ public:
 
 private:
   char *m_text;
+  Value* m_root;
   size_t m_textLength;
   json_inner::StateMachine m_stateMachine;
   

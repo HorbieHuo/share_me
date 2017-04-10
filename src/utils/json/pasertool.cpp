@@ -1,6 +1,6 @@
-#include <memory.h>
-#include <assert.h>
 #include "pasertool.h"
+#include <assert.h>
+#include <memory.h>
 
 namespace share_me_utils {
 namespace json_inner {
@@ -8,7 +8,7 @@ namespace json_inner {
 StateMachine::StateMachine() { init(); }
 StateMachine::~StateMachine() {}
 bool StateMachine::init() {
-  m_currentState = 0;
+  m_currentState = OUT_ELEM;
   memset(m_currentStateDeep, 0, sizeof(m_currentStateDeep));
   m_deep = 0;
   m_charMap.Clear();
@@ -19,8 +19,14 @@ bool StateMachine::init() {
   m_charMap.Set(',');
   m_charMap.Set(':');
   m_charMap.Set('"');
+  m_charMap.Set('-');
+  for (char i = '0'; i <= '9'; ++i) {
+    m_charMap.Set(i);
+  }
   return true;
 }
+
+const CharMap &GetSpecialCharMap() { return m_charMap; }
 
 bool StateMachine::has(const STATE &s) { return (m_currentState & s) != 0; }
 
@@ -85,7 +91,7 @@ int StateMachine::Next(const char &c) {
     break;
   }
   default: {
-    if (c >= 0 && c <= 9) {
+    if (c >= '0' && c <= '9') {
       if (has(IN_ELEM)) {
         action = onOutElement();
       } else {
@@ -182,10 +188,10 @@ void CharMap::Clear() { memset(m_map, 0, sizeof(m_map)); }
 bool CharMap::operator[](const char &c) { return true; }
 
 bool CharMap::Set(const char &c) {
-	int charPos = c / 4 + 1;
-	int offsetPos = c % 4;
-	m_map[charPos] |= 1 << offsetPos;
-	return true;
+  int charPos = c / 4 + 1;
+  int offsetPos = c % 4;
+  m_map[charPos] |= 1 << offsetPos;
+  return true;
 }
 }
 }
