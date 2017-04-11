@@ -93,6 +93,24 @@ bool Json::onAction(int action) {
   }
 }
 
+bool Json::onIntoObject() {
+  if (!m_currentValue) {
+    m_currentValue = new Value();
+    m_root = m_currentValue;
+    return true;
+  }
+  Value* currentValue = new Value();
+  m_currentValue.addChild(currentValue);
+  m_currentValue = currentValue;
+  return true;
+}
+
+bool onGetOutObject() {
+  if (!m_currentValue) return false;
+  m_currentValue = m_currentValue.GetParent();
+  return true;
+}
+
 // ----------------------------------------
 
 Value::Value() {}

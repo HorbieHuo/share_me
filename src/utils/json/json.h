@@ -28,10 +28,13 @@ public:
 
 private:
   bool onAction(int action);
+  bool onIntoObject();
+  bool onGetOutObject();
 
 private:
   char *m_text;
   Value *m_root;
+  Value *m_currentValue;
   size_t m_textLength;
   json_inner::StateMachine m_stateMachine;
 };
