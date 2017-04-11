@@ -60,6 +60,39 @@ bool Json::Paser() {
   return true;
 }
 
+bool Json::onAction(int action) {
+  switch(action) {
+    case json_inner::StateMachine::INTO_OBJECT: {
+      break;
+    }
+    case json_inner::StateMachine::GET_OUT_OBJECT: {
+      break;
+    }
+    case json_inner::StateMachine::INTO_ARRAY: {
+      break;
+    }
+    case json_inner::StateMachine::GET_OUT_ARRAY: {
+      break;
+    }
+    case json_inner::StateMachine::INTO_ELEM: {
+      break;
+    }
+    case json_inner::StateMachine::GET_OUT_ELEM: {
+      break;
+    }
+    case json_inner::StateMachine::NEXT_ELEM: {
+      break;
+    }
+    case json_inner::StateMachine::NEXT_OBJECT: {
+      break;
+    }
+    default: {
+      assert(0);
+    }
+    return true;
+  }
+}
+
 // ----------------------------------------
 
 Value::Value() {}

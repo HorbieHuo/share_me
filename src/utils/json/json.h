@@ -27,6 +27,9 @@ public:
   bool Paser();
 
 private:
+  bool onAction(int action);
+
+private:
   char *m_text;
   Value *m_root;
   size_t m_textLength;
