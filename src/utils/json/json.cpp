@@ -64,32 +64,40 @@ bool Json::Paser() {
 bool Json::onAction(int action) {
   switch (action) {
   case json_inner::StateMachine::INTO_OBJECT: {
+    return onIntoObject();
     break;
   }
   case json_inner::StateMachine::GET_OUT_OBJECT: {
+    return onGetOutObject();
     break;
   }
   case json_inner::StateMachine::INTO_ARRAY: {
+    return onIntoArray();
     break;
   }
   case json_inner::StateMachine::GET_OUT_ARRAY: {
+    return onGetOutArray();
     break;
   }
   case json_inner::StateMachine::INTO_ELEM: {
+    return onIntoElement();
     break;
   }
   case json_inner::StateMachine::GET_OUT_ELEM: {
+    return onGetOutElement();
     break;
   }
   case json_inner::StateMachine::NEXT_ELEM: {
-    break;
+    return onNextElement();
+    return on break;
   }
   case json_inner::StateMachine::NEXT_OBJECT: {
+    return onNextObject();
     break;
   }
   default: { assert(0); }
-    return true;
   }
+  return true;
 }
 
 bool Json::onIntoObject() {
@@ -123,6 +131,25 @@ bool Json::onGetOutElement() {
   if (!m_currentValue)
     return false;
   m_currentValue = m_currentValue.GetParent();
+  return true;
+}
+
+bool Json::onNextElement() {
+  Value *v = m_currentValue.GetParent();
+  if (!v)
+    return false;
+  Value *currentValue = new Value();
+  v.addChild(currentValue);
+  m_currentValue = currentValue;
+  return true;
+}
+bool Json::onNextObject() {
+  Value *v = m_currentValue.GetParent();
+  if (!v)
+    return false;
+  Value *currentValue = new Value();
+  v.addChild(currentValue);
+  m_currentValue = currentValue;
   return true;
 }
 

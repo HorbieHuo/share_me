@@ -34,6 +34,8 @@ private:
   bool onGetOutArray();
   bool onIntoElement();
   bool onGetOutElement();
+  bool onNextElement();
+  bool onNextObject();
 
 private:
   char *m_text;
