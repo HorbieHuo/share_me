@@ -65,37 +65,32 @@ bool Json::onAction(int action) {
   switch (action) {
   case json_inner::StateMachine::INTO_OBJECT: {
     return onIntoObject();
-    break;
   }
   case json_inner::StateMachine::GET_OUT_OBJECT: {
     return onGetOutObject();
-    break;
   }
   case json_inner::StateMachine::INTO_ARRAY: {
     return onIntoArray();
-    break;
   }
   case json_inner::StateMachine::GET_OUT_ARRAY: {
     return onGetOutArray();
-    break;
   }
   case json_inner::StateMachine::INTO_ELEM: {
     return onIntoElement();
-    break;
   }
   case json_inner::StateMachine::GET_OUT_ELEM: {
     return onGetOutElement();
-    break;
   }
   case json_inner::StateMachine::NEXT_ELEM: {
     return onNextElement();
-    return on break;
   }
   case json_inner::StateMachine::NEXT_OBJECT: {
     return onNextObject();
-    break;
   }
-  default: { assert(0); }
+  default: {
+    assert(0);
+    return false;
+  }
   }
   return true;
 }
