@@ -30,6 +30,10 @@ private:
   bool onAction(int action);
   bool onIntoObject();
   bool onGetOutObject();
+  bool onIntoArray();
+  bool onGetOutArray();
+  bool onIntoElement();
+  bool onGetOutElement();
 
 private:
   char *m_text;
