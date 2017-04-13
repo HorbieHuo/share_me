@@ -51,12 +51,17 @@ bool Json::Paser() {
   if (*textPos != '{')
     return false;
   int currentAction = 0;
+  char *beginPos = textPos;
   while (*textPos != '\0') {
-    if (specialCharMap[*textPos]) {
+    if (m_stateMachine.isSpecialChar(prevChar, *textPos)) {
+      if (m_currentValue) {
+        m_currentValue.Set(beginPos, textPos - beginPos);
+      }
       currentAction = m_stateMachine.Next(*textPos);
       if (!onAction(currentAction)) {
         return false;
       }
+      ++textPos;
     }
     // TODO build value
   }
@@ -152,8 +157,32 @@ bool Json::onNextObject() {
 
 // ----------------------------------------
 
-Value::Value() {}
-Value::Value(const Value &other) {}
-Value::~Value() {}
-Value &Value::operator=(const Value &other) { return *this; }
+Value::Value()
+    : m_children(nullptr), m_parent(nullptr), m_data(nullptr), m_dataLength(0) {
+}
+Value::Value(const Value &other) { Set(other.m_data, other.m_dataLength); }
+Value::~Value() {
+  //TODO delete child node
+  if (m_data) {
+    delete[] m_data;
+    m_data = nullptr;
+  }
+  m_dataLength = 0;
+}
+Value &Value::operator=(const Value &other) {
+  Set(other.m_data, other.m_dataLength);
+  return *this;
+}
+
+bool Value::Set(const char *data, const int length) {
+  if (!data)
+    return false;
+  if (m_data) {
+    delete[] m_data;
+    m_data = nullptr;
+  }
+  m_data = new char[length + 1];
+  memcpy(m_data, data, length);
+  return true;
+}
 }

@@ -57,10 +57,8 @@ bool StateMachine::isSpecialChar(const char &prevChar, const char &curChar) {
     return false;
   if (prevChar == '\\')
     return false;
-  if (curChar >= '0' && curChar >= '9') {
-    if (has(IN_ELEM))
-      return false;
-  }
+  if (has(IN_ELEM))
+    return false;
   return true;
 }
 

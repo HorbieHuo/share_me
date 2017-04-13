@@ -12,9 +12,14 @@ public:
   ~Value();
   Value &operator=(const Value &other);
 
+  bool Set(const char* data, const int length);
+
 private:
   Value *m_children;
   Value *parent;
+
+  char* m_data;
+  int m_dataLength;
 };
 
 class Json {
