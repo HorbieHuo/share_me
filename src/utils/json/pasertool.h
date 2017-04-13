@@ -22,19 +22,21 @@ class StateMachine {
 public:
   enum STATE_POS {
     OBJECT_POS = 0,
-    ARRAY_POS = 1,
-    KEY_ELEM_POS = 2,
-    VALUE_ELEM_POS = 3,
-    IN_ELEM_POS = 4,
-    OUT_ELEM_POS = 5,
-    TOP_STATE_POS = 6,
+    ARRAY_POS,
+    KEY_ELEM_POS,
+    VALUE_ELEM_POS,
+    IN_STR_ELEM_POS,
+    IN_NUM_ELEM_POS,
+    OUT_ELEM_POS,
+    TOP_STATE_POS,
   };
   enum STATE {
     OBJECT = 1 << OBJECT_POS,
     ARRAY = 1 << ARRAY_POS,
     KEY_ELEM = 1 << KEY_ELEM_POS,
     VALUE_ELEM = 1 << VALUE_ELEM_POS,
-    IN_ELEM = 1 << IN_ELEM_POS,
+    IN_STR_ELEM = 1 << IN_STR_ELEM_POS,
+    IN_NUM_ELEM = 1 << IN_NUM_ELEM_POS,
     OUT_ELEM = 1 << OUT_ELEM_POS,
     TOP_STATE = 1 << TOP_STATE_POS,
   };
@@ -55,6 +57,7 @@ public:
   ~StateMachine();
   int Next(const char &c);
   const CharMap &GetSpecialCharMap();
+  bool isSpecialChar(const char &prevChar, const char &curChar);
 
 private:
   bool init();
@@ -65,8 +68,10 @@ private:
   int onOutObject();
   int onIntoArray();
   int onOutArray();
-  int onIntoElement();
-  int onOutElement();
+  int onIntoStringElement();
+  int onOutStringElement();
+  int onIntoNumberElement();
+  int onOutNumberElement();
   int onNextElement();
 
 private:

@@ -52,6 +52,18 @@ void StateMachine::reducePosDeep(const int &pos) {
   assert(0);
 }
 
+bool isSpecialChar(const char &prevChar, const char &curChar) {
+  if (!m_charMap[c])
+    return false;
+  if (prevChar == '\\')
+    return false;
+  if (curChar >= '0' && curChar >= '9') {
+    if (has(IN_ELEM))
+      return false;
+  }
+  return true;
+}
+
 int StateMachine::Next(const char &c) {
   if (!m_charMap[c])
     return 0;
@@ -92,10 +104,10 @@ int StateMachine::Next(const char &c) {
   }
   default: {
     if (c >= '0' && c <= '9') {
-      if (has(IN_ELEM)) {
-        action = onOutElement();
-      } else {
+      if (!has(IN_ELEM)) {
         action = onIntoElement();
+      } else {
+        assert(0);
       }
     } else {
       return 0;
@@ -141,27 +153,52 @@ int StateMachine::onOutArray() {
   }
   return 0;
 }
-int StateMachine::onIntoElement() {
+int StateMachine::onIntoStringElement() {
   if (has(OUT_ELEM) && (has(ARRAY) || has(OBJECT))) {
     m_currentState &= ~OUT_ELEM;
-    m_currentState |= IN_ELEM;
-    addPosDeep(IN_ELEM);
-    return INTO_ELEM;
+    m_currentState |= IN_STR_ELEM;
+    addPosDeep(IN_STR_ELEM);
+    return INTO_STR_ELEM;
   }
   return 0;
 }
-int StateMachine::onOutElement() {
+int StateMachine::onOutStringElement() {
   if (has(IN_ELEM)) {
-    m_currentState &= ~IN_ELEM;
+    m_currentState &= ~IN_STR_ELEM;
     m_currentState |= OUT_ELEM;
-    reducePosDeep(IN_ELEM);
+    reducePosDeep(IN_STR_ELEM);
     return GET_OUT_ELEM;
   }
   return 0;
 }
+
+int StateMachine::onIntoNumberElement() {
+  if (has(OUT_ELEM) && (has(ARRAY) || has(OBJECT))) {
+    m_currentState &= ~OUT_ELEM;
+    m_currentState |= IN_NUM_ELEM;
+    addPosDeep(IN_NUM_ELEM);
+    return INTO_NUM_ELEM;
+  }
+  return 0;
+}
+int StateMachine::onOutNumberElement() {
+  if (has(IN_ELEM)) {
+    m_currentState &= ~IN_NUM_ELEM;
+    m_currentState |= OUT_ELEM;
+    reducePosDeep(IN_NUM_ELEM);
+    return GET_OUT_ELEM;
+  }
+  return 0;
+}
+
 int StateMachine::onNextElement() {
   if (!has(OUT_ELEM)) {
-    onOutElement();
+    if (has(IN_NUM_ELEM)) {
+      onOutNumberElement();
+    } else {
+      assert(0);
+      return 0;
+    }
   }
   if (has(OUT_ELEM) && has(ARRAY) && has(OBJECT)) {
     return NEXT_ELEM;

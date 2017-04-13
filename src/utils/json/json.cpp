@@ -54,7 +54,9 @@ bool Json::Paser() {
   while (*textPos != '\0') {
     if (specialCharMap[*textPos]) {
       currentAction = m_stateMachine.Next(*textPos);
-      // TODO dispatch action
+      if (!onAction(currentAction)) {
+        return false;
+      }
     }
     // TODO build value
   }

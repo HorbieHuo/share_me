@@ -37,6 +37,7 @@ private:
   bool onNextElement();
   bool onNextObject();
 
+
 private:
   char *m_text;
   Value *m_root;
