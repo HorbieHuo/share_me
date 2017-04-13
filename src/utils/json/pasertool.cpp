@@ -52,7 +52,7 @@ void StateMachine::reducePosDeep(const int &pos) {
   assert(0);
 }
 
-bool isSpecialChar(const char &prevChar, const char &curChar) {
+bool StateMachine::isSpecialChar(const char &prevChar, const char &curChar) {
   if (!m_charMap[c])
     return false;
   if (prevChar == '\\')
@@ -153,52 +153,27 @@ int StateMachine::onOutArray() {
   }
   return 0;
 }
-int StateMachine::onIntoStringElement() {
+int StateMachine::onIntoElement() {
   if (has(OUT_ELEM) && (has(ARRAY) || has(OBJECT))) {
     m_currentState &= ~OUT_ELEM;
-    m_currentState |= IN_STR_ELEM;
-    addPosDeep(IN_STR_ELEM);
-    return INTO_STR_ELEM;
+    m_currentState |= IN_ELEM;
+    addPosDeep(IN_ELEM);
+    return INTO_ELEM;
   }
   return 0;
 }
-int StateMachine::onOutStringElement() {
+int StateMachine::onOutElement() {
   if (has(IN_ELEM)) {
-    m_currentState &= ~IN_STR_ELEM;
+    m_currentState &= ~IN_ELEM;
     m_currentState |= OUT_ELEM;
-    reducePosDeep(IN_STR_ELEM);
+    reducePosDeep(IN_ELEM);
     return GET_OUT_ELEM;
   }
   return 0;
 }
-
-int StateMachine::onIntoNumberElement() {
-  if (has(OUT_ELEM) && (has(ARRAY) || has(OBJECT))) {
-    m_currentState &= ~OUT_ELEM;
-    m_currentState |= IN_NUM_ELEM;
-    addPosDeep(IN_NUM_ELEM);
-    return INTO_NUM_ELEM;
-  }
-  return 0;
-}
-int StateMachine::onOutNumberElement() {
-  if (has(IN_ELEM)) {
-    m_currentState &= ~IN_NUM_ELEM;
-    m_currentState |= OUT_ELEM;
-    reducePosDeep(IN_NUM_ELEM);
-    return GET_OUT_ELEM;
-  }
-  return 0;
-}
-
 int StateMachine::onNextElement() {
   if (!has(OUT_ELEM)) {
-    if (has(IN_NUM_ELEM)) {
-      onOutNumberElement();
-    } else {
-      assert(0);
-      return 0;
-    }
+    onOutElement();
   }
   if (has(OUT_ELEM) && has(ARRAY) && has(OBJECT)) {
     return NEXT_ELEM;
