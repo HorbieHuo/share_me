@@ -12,13 +12,15 @@ public:
   ~Value();
   Value &operator=(const Value &other);
 
-  bool Set(const char* data, const int length);
+  bool Set(const char *data, const int length);
+  bool AddChild(Value *v);
+  Value *GetParent();
 
 private:
-  Value *m_children;
-  Value *parent;
+  Value **m_children;
+  Value *m_parent;
 
-  char* m_data;
+  char *m_data;
   int m_dataLength;
 };
 
@@ -41,7 +43,6 @@ private:
   bool onGetOutElement();
   bool onNextElement();
   bool onNextObject();
-
 
 private:
   char *m_text;

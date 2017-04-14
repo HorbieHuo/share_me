@@ -53,7 +53,7 @@ void StateMachine::reducePosDeep(const int &pos) {
 }
 
 bool StateMachine::isSpecialChar(const char &prevChar, const char &curChar) {
-  if (!m_charMap[c])
+  if (!m_charMap[curChar])
     return false;
   if (prevChar == '\\')
     return false;

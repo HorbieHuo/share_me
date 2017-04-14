@@ -1,9 +1,12 @@
 #include "json.h"
+#include <assert.h>
 #include <memory.h>
 
 namespace share_me_utils {
 
-Json::Json() : m_text(nullptr), m_textLength(0), m_root(nullptr) {}
+Json::Json()
+    : m_text(nullptr), m_textLength(0), m_root(nullptr),
+      m_currentValue(nullptr) {}
 Json::Json(const Json &other) {
   if (this == &other)
     return;
@@ -55,7 +58,7 @@ bool Json::Paser() {
   while (*textPos != '\0') {
     if (m_stateMachine.isSpecialChar(prevChar, *textPos)) {
       if (m_currentValue) {
-        m_currentValue.Set(beginPos, textPos - beginPos);
+        m_currentValue->Set(beginPos, textPos - beginPos);
       }
       currentAction = m_stateMachine.Next(*textPos);
       if (!onAction(currentAction)) {
@@ -109,7 +112,7 @@ bool Json::onIntoObject() {
     return true;
   }
   Value *currentValue = new Value();
-  m_currentValue.addChild(currentValue);
+  m_currentValue->AddChild(currentValue);
   m_currentValue = currentValue;
   return true;
 }
@@ -117,7 +120,7 @@ bool Json::onIntoObject() {
 bool Json::onGetOutObject() {
   if (!m_currentValue)
     return false;
-  m_currentValue = m_currentValue.GetParent();
+  m_currentValue = m_currentValue->GetParent();
   return true;
 }
 
@@ -125,32 +128,33 @@ bool Json::onIntoArray() { return true; }
 
 bool Json::onGetOutArray() { return true; }
 bool Json::onIntoElement() {
-  m_currentValue.addChild(currentValue);
+  Value *currentValue = new Value();
+  m_currentValue->AddChild(currentValue);
   m_currentValue = currentValue;
   return true;
 }
 bool Json::onGetOutElement() {
   if (!m_currentValue)
     return false;
-  m_currentValue = m_currentValue.GetParent();
+  m_currentValue = m_currentValue->GetParent();
   return true;
 }
 
 bool Json::onNextElement() {
-  Value *v = m_currentValue.GetParent();
+  Value *v = m_currentValue->GetParent();
   if (!v)
     return false;
   Value *currentValue = new Value();
-  v.addChild(currentValue);
+  m_currentValue->AddChild(currentValue);
   m_currentValue = currentValue;
   return true;
 }
 bool Json::onNextObject() {
-  Value *v = m_currentValue.GetParent();
+  Value *v = m_currentValue->GetParent();
   if (!v)
     return false;
   Value *currentValue = new Value();
-  v.addChild(currentValue);
+  m_currentValue->AddChild(currentValue);
   m_currentValue = currentValue;
   return true;
 }
@@ -162,7 +166,7 @@ Value::Value()
 }
 Value::Value(const Value &other) { Set(other.m_data, other.m_dataLength); }
 Value::~Value() {
-  //TODO delete child node
+  // TODO delete child node
   if (m_data) {
     delete[] m_data;
     m_data = nullptr;
@@ -185,4 +189,20 @@ bool Value::Set(const char *data, const int length) {
   memcpy(m_data, data, length);
   return true;
 }
+
+bool Value::AddChild(Value *v) {
+  if (!m_children) {
+    m_children = new Value *[1];
+    m_children[0] = v;
+    return true;
+  }
+  int oldCount = sizeof(m_children) / sizeof(Value *);
+  Value **newSpace = new Value *[oldCount + 1];
+  memcpy(newSpace, m_children, sizeof(m_children));
+  delete[] m_children;
+  m_children = newSpace;
+  m_children[oldCount] = v;
+  return true;
+}
+Value *Value::GetParent() { return m_parent; }
 }
