@@ -1,7 +1,6 @@
 #ifndef SHARED_ME_SOCKET
 #define SHARED_ME_SOCKET
 
-#if defined(__unix__)
 #include <unistd.h>
 #include <sys/time.h>
 #include <sys/types.h>
@@ -14,11 +13,11 @@
 #include <string>
 #include <cstring>
 
+#include "isocket.h"
+
 namespace share_me_utils {
 
-// #define INVALID_SOCKET_FD (-1)
-
-class Socket {
+class Socket:public ISocket {
 private:
 
     static int INVALID_SOCKET_FD;
@@ -39,6 +38,13 @@ public:
     bool Reconnect();
     bool Connected();
     bool Send(std::string content);
+
+  virtual bool Start();
+  virtual bool SetDataHandleFunc(DataHandleCallback func);
+  virtual bool PostAcceptMsg();
+  virtual bool PostSendMsg(void *data, size_t length);
+  virtual bool PostRecvMsg(void *data);
+  virtual bool OnRecvMsg(char *data, int length);
 
 
 protected:
