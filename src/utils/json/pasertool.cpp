@@ -167,7 +167,7 @@ int StateMachine::onOutElement() {
   if (has(IN_ELEM)) {
     m_currentState &= ~IN_ELEM;
     m_currentState |= OUT_ELEM;
-    reducePosDeep(IN_ELEM);
+    reducePosDeep(IN_ELEM_POS);
     return GET_OUT_ELEM;
   }
   return 0;
@@ -177,6 +177,7 @@ int StateMachine::onNextElement() {
     onOutElement();
   }
   if (has(OUT_ELEM) && has(ARRAY) && has(OBJECT)) {
+    LOG_DEBUG("action = NEXT_ELEM");
     return NEXT_ELEM;
   } else if (has(OUT_ELEM) && !has(ARRAY) && has(OBJECT)) {
     if (has(VALUE_ELEM)) {
@@ -186,8 +187,10 @@ int StateMachine::onNextElement() {
       m_currentState &= ~KEY_ELEM;
       m_currentState |= VALUE_ELEM;
     } else {
+      LOG_DEBUG("action = NEXT_OBJECT");
       return NEXT_OBJECT;
     }
+    LOG_DEBUG("action = NEXT_ELEM");
     return NEXT_ELEM;
   }
   return 0;

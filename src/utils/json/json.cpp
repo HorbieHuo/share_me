@@ -81,13 +81,15 @@ bool Json::Paser() {
   int currentAction = 0;
   char *beginPos = textPos;
   while (*textPos != '\0') {
-    LOG_INFO("text char = %c, text offset = %d", *textPos, textPos - m_text);
+    LOG_INFO("text char = %c, text offset = %d, textPos - beginPos = %d", *textPos, textPos - m_text, textPos - beginPos);
     if (m_stateMachine.isSpecialChar(prevChar, *textPos)) {
       LOG_INFO("%c is special char", *textPos);
-      if (m_currentValue) {
-        m_currentValue->Set(beginPos, (int)(textPos - beginPos));
-      }
       currentAction = m_stateMachine.Next(*textPos);
+      if (json_inner::StateMachine::GET_OUT_ELEM == currentAction) {
+        if (m_currentValue) {
+          m_currentValue->Set(beginPos, (int)(textPos - beginPos));
+        }
+      }
       if (!onAction(currentAction)) {
         return false;
       }
@@ -221,7 +223,7 @@ Value &Value::operator=(const Value &other) {
 }
 
 bool Value::Set(const char *data, const int length) {
-  if (!data)
+  if (!data || length <= 0)
     return false;
   if (m_data) {
     delete[] m_data;
@@ -229,6 +231,9 @@ bool Value::Set(const char *data, const int length) {
   }
   m_data = new char[length + 1];
   memcpy(m_data, data, length);
+  m_dataLength = length;
+  m_data[m_dataLength] = '\0';
+  LOG_INFO("set value %s", m_data);
   return true;
 }
 
