@@ -32,7 +32,7 @@ public:
   Json &operator=(const Json &other);
 
   bool Paser();
-
+  void Set(const char* text, const int length);
 private:
   bool onAction(int action);
   bool onIntoObject();

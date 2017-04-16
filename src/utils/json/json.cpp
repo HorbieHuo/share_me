@@ -24,6 +24,11 @@ Json::~Json() {
     m_text = nullptr;
   }
   m_textLength = 0;
+  if (m_root) {
+    delete m_root;
+    m_root = nullptr;
+  }
+  m_currentValue = nullptr;
 }
 Json &Json::operator=(const Json &other) {
   if (this == &other)
@@ -36,6 +41,25 @@ Json &Json::operator=(const Json &other) {
   tmp.m_textLength = m_textLength;
   m_textLength = textLength;
   return *this;
+}
+
+void Json::Set(const char* text, const int length) {
+  if (!text || length <= 0) {
+    return;
+  }
+  if (m_text) {
+    delete[] m_text;
+    m_text = nullptr;
+  }
+  if (m_root) {
+    delete m_root;
+    m_root = nullptr;
+  }
+  m_currentValue = nullptr;
+  m_text = new char[length + 1];
+  memcpy(m_text, text, length);
+  m_textLength = length;
+  m_text[m_textLength] = '\0';
 }
 
 bool Json::Paser() {
@@ -172,6 +196,16 @@ Value::~Value() {
     m_data = nullptr;
   }
   m_dataLength = 0;
+  if (m_children) {
+    int childrenCount = sizeof(m_children) / sizeof( Value*);
+    for (int i = 0; i < childrenCount; ++i) {
+      delete m_children[i];
+      m_children[i] = nullptr;
+    }
+    delete[] m_children;
+    m_children = nullptr;
+  }
+  m_parent = nullptr;
 }
 Value &Value::operator=(const Value &other) {
   Set(other.m_data, other.m_dataLength);
