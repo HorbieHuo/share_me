@@ -1,6 +1,7 @@
 #include "json.h"
 #include <assert.h>
 #include <memory.h>
+#include "log.h"
 
 namespace share_me_utils {
 
@@ -80,14 +81,21 @@ bool Json::Paser() {
   int currentAction = 0;
   char *beginPos = textPos;
   while (*textPos != '\0') {
+    LOG_INFO("text char = %c, text offset = %d", *textPos, textPos - m_text);
     if (m_stateMachine.isSpecialChar(prevChar, *textPos)) {
+      LOG_INFO("%c is special char", *textPos);
       if (m_currentValue) {
-        m_currentValue->Set(beginPos, textPos - beginPos);
+        m_currentValue->Set(beginPos, (int)(textPos - beginPos));
       }
       currentAction = m_stateMachine.Next(*textPos);
       if (!onAction(currentAction)) {
         return false;
       }
+      prevChar = *textPos;
+      ++textPos;
+      beginPos = textPos;
+    } else {
+      prevChar = *textPos;
       ++textPos;
     }
     // TODO build value

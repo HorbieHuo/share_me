@@ -1,6 +1,7 @@
 #include "pasertool.h"
 #include <assert.h>
 #include <memory.h>
+#include "log.h"
 
 namespace share_me_utils {
 namespace json_inner {
@@ -33,11 +34,13 @@ bool StateMachine::has(const STATE &s) { return (m_currentState & s) != 0; }
 void StateMachine::addPosDeep(const int &pos) {
   if (pos >= 0 && pos < TOP_STATE_POS) {
     ++m_currentStateDeep[pos];
+    LOG_INFO("m_currentStateDeep[%d] = %d, m_currentStateDeep[IN_ELEM_POS] = %d", pos, m_currentStateDeep[pos], m_currentStateDeep[IN_ELEM_POS]);
     assert(m_currentStateDeep[pos] >= 0);
-    assert(m_currentStateDeep[IN_ELEM] == 0 ||
-           m_currentStateDeep[IN_ELEM] == 1);
+    assert(m_currentStateDeep[IN_ELEM_POS] == 0 ||
+           m_currentStateDeep[IN_ELEM_POS] == 1);
     return;
   }
+  LOG_ERROR("invalid pos = %d", pos);
   assert(0);
 }
 
@@ -45,8 +48,8 @@ void StateMachine::reducePosDeep(const int &pos) {
   if (pos >= 0 && pos < TOP_STATE_POS) {
     --m_currentStateDeep[pos];
     assert(m_currentStateDeep[pos] >= 0);
-    assert(m_currentStateDeep[IN_ELEM] == 0 ||
-           m_currentStateDeep[IN_ELEM] == 1);
+    assert(m_currentStateDeep[IN_ELEM_POS] == 0 ||
+           m_currentStateDeep[IN_ELEM_POS] == 1);
     return;
   }
   assert(0);
@@ -57,8 +60,8 @@ bool StateMachine::isSpecialChar(const char &prevChar, const char &curChar) {
     return false;
   if (prevChar == '\\')
     return false;
-  if (has(IN_ELEM))
-    return false;
+  // if (has(IN_ELEM))
+  //   return false;
   return true;
 }
 
@@ -155,7 +158,7 @@ int StateMachine::onIntoElement() {
   if (has(OUT_ELEM) && (has(ARRAY) || has(OBJECT))) {
     m_currentState &= ~OUT_ELEM;
     m_currentState |= IN_ELEM;
-    addPosDeep(IN_ELEM);
+    addPosDeep(IN_ELEM_POS);
     return INTO_ELEM;
   }
   return 0;

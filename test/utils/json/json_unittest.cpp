@@ -29,7 +29,7 @@ protected:
 TEST_F(JsonUnittest, OneEqual) { EXPECT_EQ(1, 1); }
 TEST_F(JsonUnittest, hson_test) {
   ASSERT_NE(m_json, nullptr);
-  m_json->Set(m_text, strlen(m_text));
+  m_json->Set(m_text, (int)strlen(m_text));
   ASSERT_EQ(m_json->Paser(), true);
 }
 
