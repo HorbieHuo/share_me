@@ -177,21 +177,56 @@ int StateMachine::onNextElement() {
     onOutElement();
   }
   if (has(OUT_ELEM) && has(ARRAY) && has(OBJECT)) {
-    LOG_DEBUG("action = NEXT_ELEM");
-    return NEXT_ELEM;
+    LOG_DEBUG("action = NEXT_ARRAY_ELEM");
+    return NEXT_ARRAY_ELEM;
   } else if (has(OUT_ELEM) && !has(ARRAY) && has(OBJECT)) {
     if (has(VALUE_ELEM)) {
       m_currentState &= ~VALUE_ELEM;
       m_currentState |= KEY_ELEM;
+      LOG_DEBUG("action = NEXT_KEY_ELEM");
+      return NEXT_KEY_ELEM;
     } else if (has(KEY_ELEM)) {
       m_currentState &= ~KEY_ELEM;
       m_currentState |= VALUE_ELEM;
+      LOG_DEBUG("action = NEXT_VALUE_ELEM");
+      return NEXT_VALUE_ELEM;
     } else {
       LOG_DEBUG("action = NEXT_OBJECT");
       return NEXT_OBJECT;
     }
-    LOG_DEBUG("action = NEXT_ELEM");
-    return NEXT_ELEM;
+    // LOG_DEBUG("action = NEXT_ELEM");
+    // return NEXT_ELEM;
+  }
+  return 0;
+}
+
+int StateMachine::onNextElementAfterColon() {
+  if (has(OUT_ELEM) && !has(ARRAY) && has(OBJECT)) {
+    m_currentState &= ~KEY_ELEM;
+      m_currentState |= VALUE_ELEM;
+      LOG_DEBUG("action = NEXT_VALUE_ELEM");
+      return NEXT_VALUE_ELEM;
+  }
+  return 0;
+}
+
+int StateMachine::onNextElementAfterComma() {
+  if (!has(OUT_ELEM)) {
+    onOutElement();
+  }
+  if (has(OUT_ELEM) && has(ARRAY) && has(OBJECT)) {
+    LOG_DEBUG("action = NEXT_ARRAY_ELEM");
+    return NEXT_ARRAY_ELEM;
+  } else if (has(OUT_ELEM) && !has(ARRAY) && has(OBJECT)) {
+    if (has(VALUE_ELEM)) {
+      m_currentState &= ~VALUE_ELEM;
+      m_currentState |= KEY_ELEM;
+      LOG_DEBUG("action = NEXT_KEY_ELEM");
+      return NEXT_KEY_ELEM;
+    } else {
+      LOG_DEBUG("action = NEXT_OBJECT");
+      return NEXT_OBJECT;
+    }
   }
   return 0;
 }

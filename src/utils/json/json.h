@@ -7,6 +7,12 @@ namespace share_me_utils {
 
 class Value {
 public:
+  enum ROLE {
+    KEY,
+    VALUE,
+    ARRAY,
+  };
+
   Value();
   Value(const Value &other);
   ~Value();
@@ -32,7 +38,8 @@ public:
   Json &operator=(const Json &other);
 
   bool Paser();
-  void Set(const char* text, const int length);
+  void Set(const char *text, const int length);
+
 private:
   bool onAction(int action);
   bool onIntoObject();

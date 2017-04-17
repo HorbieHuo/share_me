@@ -46,8 +46,10 @@ public:
     GET_OUT_ARRAY = TOP_STATE << 3,
     INTO_ELEM = TOP_STATE << 4,
     GET_OUT_ELEM = TOP_STATE << 5,
-    NEXT_ELEM = TOP_STATE << 6,
-    NEXT_OBJECT = TOP_STATE << 7,
+    NEXT_KEY_ELEM = TOP_STATE << 6,
+    NEXT_VALUE_ELEM = TOP_STATE << 7,
+    NEXT_ARRAY_ELEM = TOP_STATE << 8,
+    NEXT_OBJECT = TOP_STATE << 9,
   };
 
 public:
@@ -69,6 +71,8 @@ private:
   int onIntoElement();
   int onOutElement();
   int onNextElement();
+  int onNextElementAfterColon();
+  int onNextElementAfterComma();
 
 private:
   size_t m_deep;
