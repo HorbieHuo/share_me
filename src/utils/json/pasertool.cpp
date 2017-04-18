@@ -87,11 +87,11 @@ int StateMachine::Next(const char &c) {
     break;
   }
   case ',': {
-    action = onNextElement();
+    action = onNextElementAfterComma();
     break;
   }
   case ':': {
-    action = onNextElement();
+    action = onNextElementAfterColon();
     break;
   }
   case '-':

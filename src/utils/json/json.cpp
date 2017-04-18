@@ -1,13 +1,13 @@
 #include "json.h"
+#include "log.h"
 #include <assert.h>
 #include <memory.h>
-#include "log.h"
 
 namespace share_me_utils {
 
 Json::Json()
     : m_text(nullptr), m_textLength(0), m_root(nullptr),
-      m_currentValue(nullptr) {}
+      m_currentValue(nullptr), m_expectNextValueType(0) {}
 Json::Json(const Json &other) {
   if (this == &other)
     return;
@@ -44,7 +44,7 @@ Json &Json::operator=(const Json &other) {
   return *this;
 }
 
-void Json::Set(const char* text, const int length) {
+void Json::Set(const char *text, const int length) {
   if (!text || length <= 0) {
     return;
   }
@@ -81,7 +81,8 @@ bool Json::Paser() {
   int currentAction = 0;
   char *beginPos = textPos;
   while (*textPos != '\0') {
-    LOG_INFO("text char = %c, text offset = %d, textPos - beginPos = %d", *textPos, textPos - m_text, textPos - beginPos);
+    LOG_INFO("text char = %c, text offset = %d, textPos - beginPos = %d",
+             *textPos, textPos - m_text, textPos - beginPos);
     if (m_stateMachine.isSpecialChar(prevChar, *textPos)) {
       LOG_INFO("%c is special char", *textPos);
       currentAction = m_stateMachine.Next(*textPos);
@@ -125,8 +126,14 @@ bool Json::onAction(int action) {
   case json_inner::StateMachine::GET_OUT_ELEM: {
     return onGetOutElement();
   }
-  case json_inner::StateMachine::NEXT_ELEM: {
-    return onNextElement();
+  case json_inner::StateMachine::NEXT_KEY_ELEM: {
+    return onNextKeyElement();
+  }
+  case json_inner::StateMachine::NEXT_VALUE_ELEM: {
+    return onNextValueElement();
+  }
+  case json_inner::StateMachine::NEXT_ARRAY_ELEM: {
+    return onNextArrayElement();
   }
   case json_inner::StateMachine::NEXT_OBJECT: {
     return onNextObject();
@@ -141,11 +148,11 @@ bool Json::onAction(int action) {
 
 bool Json::onIntoObject() {
   if (!m_currentValue) {
-    m_currentValue = new Value();
+    m_currentValue = new Value(Value::OBJECT);
     m_root = m_currentValue;
     return true;
   }
-  Value *currentValue = new Value();
+  Value *currentValue = new Value(Value::OBJECT);
   m_currentValue->AddChild(currentValue);
   m_currentValue = currentValue;
   return true;
@@ -154,15 +161,33 @@ bool Json::onIntoObject() {
 bool Json::onGetOutObject() {
   if (!m_currentValue)
     return false;
+  if (m_currentValue->GetRole() == Value::KEY) {
+    m_currentValue = m_currentValue->GetParent();
+    if (!m_currentValue)
+      return false;
+  }
   m_currentValue = m_currentValue->GetParent();
   return true;
 }
 
-bool Json::onIntoArray() { return true; }
+bool Json::onIntoArray() {
+  Value *currentValue = new Value(Value::ARRAY);
+  m_currentValue->AddChild(currentValue);
+  m_currentValue = currentValue;
+  return true;
+  return true;
+}
 
-bool Json::onGetOutArray() { return true; }
+bool Json::onGetOutArray() {
+  Value *v = m_currentValue->GetParent();
+  if (!v)
+    return false;
+  m_expectNextValueType = Value::KEY;
+  m_currentValue = v;
+  return true;
+}
 bool Json::onIntoElement() {
-  Value *currentValue = new Value();
+  Value *currentValue = new Value(m_expectNextValueType);
   m_currentValue->AddChild(currentValue);
   m_currentValue = currentValue;
   return true;
@@ -174,20 +199,27 @@ bool Json::onGetOutElement() {
   return true;
 }
 
-bool Json::onNextElement() {
+bool Json::onNextValueElement() {
+  m_expectNextValueType = Value::VALUE;
+  return true;
+}
+bool Json::onNextKeyElement() {
   Value *v = m_currentValue->GetParent();
   if (!v)
     return false;
-  Value *currentValue = new Value();
-  m_currentValue->AddChild(currentValue);
-  m_currentValue = currentValue;
+  m_expectNextValueType = Value::KEY;
+  m_currentValue = v;
+  return true;
+}
+bool Json::onNextArrayElement() {
+  m_expectNextValueType = Value::VALUE;
   return true;
 }
 bool Json::onNextObject() {
   Value *v = m_currentValue->GetParent();
   if (!v)
     return false;
-  Value *currentValue = new Value();
+  Value *currentValue = new Value(Value::OBJECT);
   m_currentValue->AddChild(currentValue);
   m_currentValue = currentValue;
   return true;
@@ -195,9 +227,9 @@ bool Json::onNextObject() {
 
 // ----------------------------------------
 
-Value::Value()
-    : m_children(nullptr), m_parent(nullptr), m_data(nullptr), m_dataLength(0) {
-}
+Value::Value(const int &role)
+    : m_children(nullptr), m_parent(nullptr), m_data(nullptr), m_dataLength(0),
+      m_role(role) {}
 Value::Value(const Value &other) { Set(other.m_data, other.m_dataLength); }
 Value::~Value() {
   // TODO delete child node
@@ -207,7 +239,7 @@ Value::~Value() {
   }
   m_dataLength = 0;
   if (m_children) {
-    int childrenCount = sizeof(m_children) / sizeof( Value*);
+    int childrenCount = sizeof(m_children) / sizeof(Value *);
     for (int i = 0; i < childrenCount; ++i) {
       delete m_children[i];
       m_children[i] = nullptr;
@@ -252,4 +284,5 @@ bool Value::AddChild(Value *v) {
   return true;
 }
 Value *Value::GetParent() { return m_parent; }
+int Value::GetRole() { return m_role; }
 }
