@@ -5,6 +5,13 @@
 
 namespace share_me_utils {
 
+#define ASSERT_NOT_NULL(v) do {\
+if (!v) {\
+LOG_ERROR(#v" is nullptr");\
+assert(0);\
+}\
+} while(0)
+
 class Value {
 public:
   enum ROLE {
@@ -22,6 +29,7 @@ public:
   bool Set(const char *data, const int length);
   bool AddChild(Value *v);
   Value *GetParent();
+  void SetParent(Value *v);
   int GetRole();
 
 private:

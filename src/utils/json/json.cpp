@@ -139,6 +139,7 @@ bool Json::onAction(int action) {
     return onNextObject();
   }
   default: {
+    LOG_ERROR("Error action = %d", action);
     assert(0);
     return false;
   }
@@ -188,8 +189,12 @@ bool Json::onGetOutArray() {
 }
 bool Json::onIntoElement() {
   Value *currentValue = new Value(m_expectNextValueType);
+  LOG_INFO("into elem");
+  ASSERT_NOT_NULL(m_currentValue);
   m_currentValue->AddChild(currentValue);
+  LOG_INFO("into elem");
   m_currentValue = currentValue;
+  LOG_INFO("into elem");
   return true;
 }
 bool Json::onGetOutElement() {
@@ -201,6 +206,7 @@ bool Json::onGetOutElement() {
 
 bool Json::onNextValueElement() {
   m_expectNextValueType = Value::VALUE;
+  ASSERT_NOT_NULL(m_currentValue);
   return true;
 }
 bool Json::onNextKeyElement() {
@@ -262,6 +268,7 @@ bool Value::Set(const char *data, const int length) {
     m_data = nullptr;
   }
   m_data = new char[length + 1];
+  LOG_INFO("data length = %d", length);
   memcpy(m_data, data, length);
   m_dataLength = length;
   m_data[m_dataLength] = '\0';
@@ -270,19 +277,28 @@ bool Value::Set(const char *data, const int length) {
 }
 
 bool Value::AddChild(Value *v) {
+  LOG_INFO("child value 0x%X", v);
+  LOG_INFO("this 0x%X", this);
   if (!m_children) {
+    LOG_INFO("m_children 0x%X", m_children);
     m_children = new Value *[1];
+    LOG_INFO("m_children 0x%X", m_children);
     m_children[0] = v;
+    v->SetParent(this);
     return true;
   }
   int oldCount = sizeof(m_children) / sizeof(Value *);
+  LOG_INFO("old count child %d", oldCount);
   Value **newSpace = new Value *[oldCount + 1];
   memcpy(newSpace, m_children, sizeof(m_children));
   delete[] m_children;
   m_children = newSpace;
+  LOG_INFO("add child finish");
   m_children[oldCount] = v;
+  v->SetParent(this);
   return true;
 }
+void Value::SetParent(Value *v) { m_parent = v; }
 Value *Value::GetParent() { return m_parent; }
 int Value::GetRole() { return m_role; }
 }

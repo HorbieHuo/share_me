@@ -1,7 +1,8 @@
 #include "pasertool.h"
+#include "log.h"
 #include <assert.h>
 #include <memory.h>
-#include "log.h"
+
 
 namespace share_me_utils {
 namespace json_inner {
@@ -24,6 +25,7 @@ bool StateMachine::init() {
   for (char i = '0'; i <= '9'; ++i) {
     m_charMap.Set(i);
   }
+  LOG_INFO("m_currentState = %d", m_currentState);
   return true;
 }
 
@@ -34,7 +36,9 @@ bool StateMachine::has(const STATE &s) { return (m_currentState & s) != 0; }
 void StateMachine::addPosDeep(const int &pos) {
   if (pos >= 0 && pos < TOP_STATE_POS) {
     ++m_currentStateDeep[pos];
-    LOG_INFO("m_currentStateDeep[%d] = %d, m_currentStateDeep[IN_ELEM_POS] = %d", pos, m_currentStateDeep[pos], m_currentStateDeep[IN_ELEM_POS]);
+    LOG_INFO(
+        "m_currentStateDeep[%d] = %d, m_currentStateDeep[IN_ELEM_POS] = %d",
+        pos, m_currentStateDeep[pos], m_currentStateDeep[IN_ELEM_POS]);
     assert(m_currentStateDeep[pos] >= 0);
     assert(m_currentStateDeep[IN_ELEM_POS] == 0 ||
            m_currentStateDeep[IN_ELEM_POS] == 1);
@@ -68,6 +72,7 @@ bool StateMachine::isSpecialChar(const char &prevChar, const char &curChar) {
 int StateMachine::Next(const char &c) {
   if (!m_charMap[c])
     return 0;
+  LOG_INFO("m_currentState = %d", m_currentState);
   int action = 0;
   switch (c) {
   case '{': {
@@ -119,19 +124,27 @@ int StateMachine::Next(const char &c) {
 }
 
 int StateMachine::onIntoObject() {
+  LOG_INFO("m_currentState = %d", m_currentState);
   if (has(OUT_ELEM)) {
     m_currentState |= OBJECT;
     addPosDeep(OBJECT_POS);
+    LOG_INFO("action INTO_OBJECT");
+    LOG_INFO("m_currentState = %d", m_currentState);
     return INTO_OBJECT;
   }
   return 0;
 }
 int StateMachine::onOutObject() {
+  LOG_INFO("m_currentState = %d", m_currentState);
   if (has(OUT_ELEM) && has(OBJECT)) {
     reducePosDeep(OBJECT_POS);
     if (m_currentStateDeep[OBJECT_POS] == 0) {
       m_currentState &= ~OBJECT;
     }
+    m_currentState &= ~KEY_ELEM;
+    m_currentState &= ~VALUE_ELEM;
+    LOG_INFO("action GET_OUT_OBJECT");
+    LOG_INFO("m_currentState = %d", m_currentState);
     return GET_OUT_OBJECT;
   }
   return 0;
@@ -140,34 +153,46 @@ int StateMachine::onIntoArray() {
   if (has(OUT_ELEM) && has(VALUE_ELEM) && has(OBJECT)) {
     m_currentState |= ARRAY;
     addPosDeep(ARRAY_POS);
+    LOG_INFO("action INTO_ARRAY");
     return INTO_ARRAY;
   }
   return 0;
 }
 int StateMachine::onOutArray() {
-  if (m_currentState & (OUT_ELEM | ARRAY)) {
+  if (has(OUT_ELEM) && has(ARRAY)) {
     reducePosDeep(ARRAY_POS);
     if (m_currentStateDeep[ARRAY_POS] == 0) {
       m_currentState &= ~ARRAY;
+      m_currentState &= ~KEY_ELEM;
+      m_currentState &= ~VALUE_ELEM;
     }
+    LOG_INFO("action GET_OUT_ARRAY");
     return GET_OUT_ARRAY;
   }
   return 0;
 }
 int StateMachine::onIntoElement() {
+  LOG_INFO("m_currentState = %d", m_currentState);
   if (has(OUT_ELEM) && (has(ARRAY) || has(OBJECT))) {
+    LOG_INFO("m_currentState = %d", m_currentState);
     m_currentState &= ~OUT_ELEM;
+    LOG_INFO("m_currentState = %d", m_currentState);
     m_currentState |= IN_ELEM;
     addPosDeep(IN_ELEM_POS);
+    LOG_INFO("action INTO_ELEM");
+    LOG_INFO("m_currentState = %d", m_currentState);
     return INTO_ELEM;
   }
   return 0;
 }
 int StateMachine::onOutElement() {
+  LOG_INFO("m_currentState = %d", m_currentState);
   if (has(IN_ELEM)) {
     m_currentState &= ~IN_ELEM;
     m_currentState |= OUT_ELEM;
     reducePosDeep(IN_ELEM_POS);
+    LOG_INFO("action GET_OUT_ELEM");
+    LOG_INFO("m_currentState = %d", m_currentState);
     return GET_OUT_ELEM;
   }
   return 0;
@@ -203,10 +228,11 @@ int StateMachine::onNextElement() {
 int StateMachine::onNextElementAfterColon() {
   if (has(OUT_ELEM) && !has(ARRAY) && has(OBJECT)) {
     m_currentState &= ~KEY_ELEM;
-      m_currentState |= VALUE_ELEM;
-      LOG_DEBUG("action = NEXT_VALUE_ELEM");
-      return NEXT_VALUE_ELEM;
+    m_currentState |= VALUE_ELEM;
+    LOG_DEBUG("action = NEXT_VALUE_ELEM");
+    return NEXT_VALUE_ELEM;
   }
+  LOG_INFO("m_currentState = %d", m_currentState);
   return 0;
 }
 
@@ -237,13 +263,17 @@ CharMap::~CharMap() {}
 void CharMap::Clear() { memset(m_map, 0, sizeof(m_map)); }
 
 bool CharMap::operator[](const char &c) const {
-  int charPos = c / 4 + 1;
+  int charPos = c / 4;
   int offsetPos = c % 4;
   return (m_map[charPos] & 1 << offsetPos) != 0;
 }
 
 bool CharMap::Set(const char &c) {
-  int charPos = c / 4 + 1;
+  if (c >= 32 * 4) {
+    LOG_ERROR("char too big %d, %c", c, c);
+    assert(0);
+  }
+  int charPos = c / 4;
   int offsetPos = c % 4;
   m_map[charPos] |= 1 << offsetPos;
   return true;
