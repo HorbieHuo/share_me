@@ -2,6 +2,7 @@
 #include "log.h"
 #include <assert.h>
 #include <memory.h>
+#include <iostream>
 
 namespace share_me_utils {
 
@@ -102,6 +103,9 @@ bool Json::Paser() {
       ++textPos;
     }
     // TODO build value
+  }
+  if (m_root) {
+    m_root->Print(0);
   }
   return true;
 }
@@ -234,7 +238,7 @@ bool Json::onNextObject() {
 // ----------------------------------------
 
 Value::Value(const int &role)
-    : m_children(nullptr), m_parent(nullptr), m_data(nullptr), m_dataLength(0),
+    : m_children(nullptr), m_parent(nullptr), m_data(nullptr), m_dataLength(0), m_childCount(0),
       m_role(role) {}
 Value::Value(const Value &other) { Set(other.m_data, other.m_dataLength); }
 Value::~Value() {
@@ -245,8 +249,7 @@ Value::~Value() {
   }
   m_dataLength = 0;
   if (m_children) {
-    int childrenCount = sizeof(m_children) / sizeof(Value *);
-    for (int i = 0; i < childrenCount; ++i) {
+    for (int i = 0; i < m_childCount; ++i) {
       delete m_children[i];
       m_children[i] = nullptr;
     }
@@ -284,21 +287,51 @@ bool Value::AddChild(Value *v) {
     m_children = new Value *[1];
     LOG_INFO("m_children 0x%X", m_children);
     m_children[0] = v;
+    m_childCount = 1;
     v->SetParent(this);
     return true;
   }
-  int oldCount = sizeof(m_children) / sizeof(Value *);
-  LOG_INFO("old count child %d", oldCount);
-  Value **newSpace = new Value *[oldCount + 1];
+  LOG_INFO("old count child %d", m_childCount);
+  Value **newSpace = new Value *[m_childCount + 1];
   memcpy(newSpace, m_children, sizeof(m_children));
   delete[] m_children;
   m_children = newSpace;
   LOG_INFO("add child finish");
-  m_children[oldCount] = v;
+  m_children[m_childCount] = v;
   v->SetParent(this);
+  ++m_childCount;
   return true;
 }
 void Value::SetParent(Value *v) { m_parent = v; }
 Value *Value::GetParent() { return m_parent; }
 int Value::GetRole() { return m_role; }
+
+void Value::Print(int indent) {
+  for (int i = 0; i < indent; ++i) {
+    std::cout << " ";
+  }
+  switch (m_role) {
+    case KEY:
+    case VALUE: {
+       std::cout << m_data;
+       break;
+    }
+    case ARRAY: {
+      std::cout << "[]";
+      break;
+    }
+    case OBJECT: {
+      std::cout << "{}";
+      break;
+    }
+    default: {
+      LOG_ERROR("invalid value role %d", m_role);
+      assert(0);
+    }
+  }
+  std::cout << std::endl;
+  for (int i = 0; i < m_childCount; ++i) {
+    m_children[i]->Print(indent + 2);
+  }
+}
 }

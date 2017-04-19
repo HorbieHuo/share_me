@@ -31,9 +31,11 @@ public:
   Value *GetParent();
   void SetParent(Value *v);
   int GetRole();
+  void Print(int indent=0);
 
 private:
   Value **m_children;
+  int m_childCount;
   Value *m_parent;
 
   char *m_data;
