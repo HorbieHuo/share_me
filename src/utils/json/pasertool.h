@@ -5,18 +5,18 @@ namespace share_me_utils {
 namespace json_inner {
 #define STATE_DIVIDE_ACTION
 
-	class CharMap {
-	public:
-		CharMap();
-		~CharMap();
-		void Clear();
-		bool Set(const char &c);
+class CharMap {
+public:
+  CharMap();
+  ~CharMap();
+  void Clear();
+  bool Set(const char &c);
 
-		bool operator[](const char &c);
+  bool operator[](const char &c) const;
 
-	private:
-		char m_map[32];
-	};
+private:
+  char m_map[32];
+};
 
 class StateMachine {
 public:
@@ -46,20 +46,24 @@ public:
     GET_OUT_ARRAY = TOP_STATE << 3,
     INTO_ELEM = TOP_STATE << 4,
     GET_OUT_ELEM = TOP_STATE << 5,
-    NEXT_ELEM = TOP_STATE << 6,
-    NEXT_OBJECT = TOP_STATE << 7,
+    NEXT_KEY_ELEM = TOP_STATE << 6,
+    NEXT_VALUE_ELEM = TOP_STATE << 7,
+    NEXT_ARRAY_ELEM = TOP_STATE << 8,
+    NEXT_OBJECT = TOP_STATE << 9,
   };
 
 public:
   StateMachine();
   ~StateMachine();
   int Next(const char &c);
+  const CharMap &GetSpecialCharMap();
+  bool isSpecialChar(const char &prevChar, const char &curChar);
 
 private:
   bool init();
   bool has(const STATE &s);
-  void addPosDeep(const int& pos);
-  void reducePosDeep(const int& pos);
+  void addPosDeep(const int &pos);
+  void reducePosDeep(const int &pos);
   int onIntoObject();
   int onOutObject();
   int onIntoArray();
@@ -67,6 +71,8 @@ private:
   int onIntoElement();
   int onOutElement();
   int onNextElement();
+  int onNextElementAfterColon();
+  int onNextElementAfterComma();
 
 private:
   size_t m_deep;
@@ -74,8 +80,6 @@ private:
   int m_currentState;
   int m_currentStateDeep[TOP_STATE_POS];
 };
-
-
 }
 }
 
