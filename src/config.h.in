@@ -1,1 +1,2 @@
 #cmakedefine UNITTEST
+#cmakedefine TEST_TILE_PATH "@TEST_TILE_PATH@"
