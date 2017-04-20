@@ -204,6 +204,8 @@ bool Json::onIntoElement() {
 bool Json::onGetOutElement() {
   if (!m_currentValue)
     return false;
+  if (m_currentValue->GetRole() == Value::KEY)
+    return true;
   m_currentValue = m_currentValue->GetParent();
   return true;
 }

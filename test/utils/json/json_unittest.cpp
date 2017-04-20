@@ -12,7 +12,8 @@ protected:
   virtual void SetUp() {
     std::cout << "JsonUnittest SetUp ..." << std::endl;
     m_json = new Json();
-    m_text = "{\"a\": \"d\"}";
+    // m_text = "{\"a\": \"d\"}";
+    m_text = "{\"a\": \"d\", \"asss\": \"ddddd\"}";
   }
   virtual void TearDown() {
     if (m_json) {
