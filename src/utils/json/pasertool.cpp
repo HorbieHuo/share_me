@@ -25,6 +25,7 @@ bool StateMachine::init() {
     m_charMap.Set(i);
   }
   LOG_INFO("m_currentState = %d", m_currentState);
+  m_actionComplete = true;
   return true;
 }
 
@@ -63,8 +64,8 @@ bool StateMachine::isSpecialChar(const char &prevChar, const char &curChar) {
     return false;
   if (prevChar == '\\')
     return false;
-  // if (has(IN_ELEM))
-  //   return false;
+  if (m_currentState == IN_ELEM && (curChar >= '0' && curChar <= '9' || curChar == '-'))
+    return false;
   return true;
 }
 
@@ -73,12 +74,18 @@ int StateMachine::Next(const char &c) {
     return 0;
   LOG_INFO("m_currentState = %d", m_currentState);
   int action = 0;
+  m_actionComplete = true;
   switch (c) {
   case '{': {
     m_currentState = OUT_ELEM;
     return INTO_OBJECT;
   }
   case '}': {
+    if (m_currentState == IN_ELEM) {
+       m_currentState = OUT_ELEM;
+      m_actionComplete = false;
+      return GET_OUT_ELEM;
+    }
     m_currentState = OUT_ELEM;
     return GET_OUT_OBJECT;
   }
@@ -87,10 +94,20 @@ int StateMachine::Next(const char &c) {
     return INTO_ARRAY;
   }
   case ']': {
+    if (m_currentState == IN_ELEM) {
+       m_currentState = OUT_ELEM;
+      m_actionComplete = false;
+      return GET_OUT_ELEM;
+    }
     m_currentState = OUT_ELEM;
     return GET_OUT_ARRAY;
   }
   case ',': {
+    if (m_currentState == IN_ELEM) {
+       m_currentState = OUT_ELEM;
+      m_actionComplete = false;
+      return GET_OUT_ELEM;
+    }
     m_currentState = OUT_ELEM;
     return NEXT_ELEM;
   }
@@ -98,7 +115,6 @@ int StateMachine::Next(const char &c) {
     m_currentState = OUT_ELEM;
     return NEXT_ELEM;
   }
-  case '-':
   case '"': {
     if (m_currentState == IN_ELEM) {
       m_currentState = OUT_ELEM;
@@ -109,10 +125,10 @@ int StateMachine::Next(const char &c) {
     }
   }
   default: {
-    if (c >= '0' && c <= '9') {
+    if (c >= '0' && c <= '9' || c == '-') {
       if (m_currentState == OUT_ELEM) {
         m_currentState = IN_ELEM;
-      return INTO_ELEM;
+        return INTO_ELEM;
       } else {
         assert(0);
         return 0;
@@ -122,6 +138,10 @@ int StateMachine::Next(const char &c) {
     }
   }
   }
+}
+
+bool  StateMachine::ActionComplete() {
+  return m_actionComplete;
 }
 
 int StateMachine::onIntoObject() {

@@ -96,6 +96,9 @@ bool Json::Paser() {
       if (!onAction(currentAction)) {
         return false;
       }
+      if (m_stateMachine.ActionComplete() == false) {
+        continue;
+      }
       prevChar = *textPos;
       ++textPos;
       beginPos = textPos;
@@ -178,14 +181,15 @@ bool Json::onIntoObject() {
 bool Json::onGetOutObject() {
   if (!m_currentValue)
     return false;
-  if (m_currentValue->GetRole() == Value::VALUE) {
-    m_currentValue = m_currentValue->GetParent();
-    assert(m_currentValue->GetRole() == Value::KEY);
-    m_currentValue = m_currentValue->GetParent();
-    LOG_INFO("m_currentValue move to parent");
-    if (!m_currentValue)
-      return false;
-  }
+  // if (m_currentValue->GetRole() == Value::VALUE) {
+  //   m_currentValue = m_currentValue->GetParent();
+  //   assert(m_currentValue->GetRole() == Value::KEY);
+  //   m_currentValue = m_currentValue->GetParent();
+  //   LOG_INFO("m_currentValue move to parent");
+  //   if (!m_currentValue)
+  //     return false;
+  // }
+  assert(m_currentValue->GetRole() == Value::OBJECT);
   m_currentValue = m_currentValue->GetParent();
   LOG_INFO("m_currentValue move to parent");
   return true;
@@ -201,13 +205,17 @@ bool Json::onIntoArray() {
 }
 
 bool Json::onGetOutArray() {
-  if (m_currentValue->GetRole() == Value::VALUE) {
-    m_currentValue = m_currentValue->GetParent();
-    LOG_INFO("m_currentValue move to parent");
-    assert(m_currentValue->GetRole() == Value::ARRAY);
-  }
+  // if (m_currentValue->GetRole() == Value::VALUE) {
+  //   m_currentValue = m_currentValue->GetParent();
+  //   LOG_INFO("m_currentValue move to parent");
+  //   assert(m_currentValue->GetRole() == Value::ARRAY);
+  // }
   // m_expectNextValueType = Value::KEY;
+  assert(m_currentValue->GetRole() == Value::ARRAY);
   m_currentValue = m_currentValue->GetParent();
+  if (m_currentValue->GetRole() == Value::KEY) {
+    m_currentValue = m_currentValue->GetParent();
+  }
   LOG_INFO("m_currentValue move to parent");
   return true;
 }
@@ -324,11 +332,11 @@ bool Value::Set(const char *data, const int length) {
     m_data = nullptr;
   }
   m_data = new char[length + 1];
-  LOG_INFO("data length = %d", length);
+  LOG_INFO("data length = %d, 0x%X", length, this);
   memcpy(m_data, data, length);
   m_dataLength = length;
   m_data[m_dataLength] = '\0';
-  LOG_INFO("set value %s", m_data);
+  LOG_INFO("set value %s, 0x%X", m_data, this);
   return true;
 }
 
@@ -344,9 +352,9 @@ bool Value::AddChild(Value *v) {
     v->SetParent(this);
     return true;
   }
-  LOG_INFO("old count child %d", m_childCount);
+  LOG_INFO("old count child %d, byte = %d", m_childCount, sizeof(Value*) * m_childCount);
   Value **newSpace = new Value *[m_childCount + 1];
-  memcpy(newSpace, m_children, sizeof(m_children));
+  memcpy(newSpace, m_children, sizeof(Value*) * m_childCount);
   delete[] m_children;
   m_children = newSpace;
   LOG_INFO("add child finish");
@@ -363,6 +371,7 @@ void Value::Print(int indent) {
   for (int i = 0; i < indent; ++i) {
     std::cout << " ";
   }
+  std::cout << this << " ";
   switch (m_role) {
   case KEY:
   case VALUE: {

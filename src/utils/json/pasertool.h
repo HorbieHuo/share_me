@@ -59,6 +59,7 @@ public:
   int Next(const char &c);
   const CharMap &GetSpecialCharMap();
   bool isSpecialChar(const char &prevChar, const char &curChar);
+  bool ActionComplete();
 
 private:
   bool init();
@@ -80,6 +81,7 @@ private:
   CharMap m_charMap;
   int m_currentState;
   int m_currentStateDeep[TOP_STATE_POS];
+  bool m_actionComplete;
 };
 }
 }
