@@ -1,8 +1,9 @@
 #include "json.h"
 #include "log.h"
 #include <assert.h>
-#include <memory.h>
 #include <iostream>
+#include <memory.h>
+
 
 namespace share_me_utils {
 
@@ -111,6 +112,12 @@ bool Json::Paser() {
 }
 
 bool Json::onAction(int action) {
+  if (m_root) {
+    m_root->Print();
+  }
+  if (m_currentValue) {
+    m_currentValue->Print();
+  }
   switch (action) {
   case json_inner::StateMachine::INTO_OBJECT: {
     return onIntoObject();
@@ -129,6 +136,9 @@ bool Json::onAction(int action) {
   }
   case json_inner::StateMachine::GET_OUT_ELEM: {
     return onGetOutElement();
+  }
+  case json_inner::StateMachine::NEXT_ELEM: {
+    return onNextElement();
   }
   case json_inner::StateMachine::NEXT_KEY_ELEM: {
     return onNextKeyElement();
@@ -152,6 +162,7 @@ bool Json::onAction(int action) {
 }
 
 bool Json::onIntoObject() {
+  m_expectNextValueType = Value::KEY;
   if (!m_currentValue) {
     m_currentValue = new Value(Value::OBJECT);
     m_root = m_currentValue;
@@ -160,35 +171,44 @@ bool Json::onIntoObject() {
   Value *currentValue = new Value(Value::OBJECT);
   m_currentValue->AddChild(currentValue);
   m_currentValue = currentValue;
+  LOG_INFO("m_currentValue move to child");
   return true;
 }
 
 bool Json::onGetOutObject() {
   if (!m_currentValue)
     return false;
-  if (m_currentValue->GetRole() == Value::KEY) {
+  if (m_currentValue->GetRole() == Value::VALUE) {
     m_currentValue = m_currentValue->GetParent();
+    assert(m_currentValue->GetRole() == Value::KEY);
+    m_currentValue = m_currentValue->GetParent();
+    LOG_INFO("m_currentValue move to parent");
     if (!m_currentValue)
       return false;
   }
   m_currentValue = m_currentValue->GetParent();
+  LOG_INFO("m_currentValue move to parent");
   return true;
 }
 
 bool Json::onIntoArray() {
+  m_expectNextValueType = Value::VALUE;
   Value *currentValue = new Value(Value::ARRAY);
   m_currentValue->AddChild(currentValue);
   m_currentValue = currentValue;
-  return true;
+  LOG_INFO("m_currentValue move to child");
   return true;
 }
 
 bool Json::onGetOutArray() {
-  Value *v = m_currentValue->GetParent();
-  if (!v)
-    return false;
-  m_expectNextValueType = Value::KEY;
-  m_currentValue = v;
+  if (m_currentValue->GetRole() == Value::VALUE) {
+    m_currentValue = m_currentValue->GetParent();
+    LOG_INFO("m_currentValue move to parent");
+    assert(m_currentValue->GetRole() == Value::ARRAY);
+  }
+  // m_expectNextValueType = Value::KEY;
+  m_currentValue = m_currentValue->GetParent();
+  LOG_INFO("m_currentValue move to parent");
   return true;
 }
 bool Json::onIntoElement() {
@@ -198,6 +218,7 @@ bool Json::onIntoElement() {
   m_currentValue->AddChild(currentValue);
   LOG_INFO("into elem");
   m_currentValue = currentValue;
+  LOG_INFO("m_currentValue move to child");
   LOG_INFO("into elem");
   return true;
 }
@@ -207,8 +228,35 @@ bool Json::onGetOutElement() {
   if (m_currentValue->GetRole() == Value::KEY)
     return true;
   m_currentValue = m_currentValue->GetParent();
+  if (m_currentValue->GetRole() == Value::KEY)
+    m_currentValue = m_currentValue->GetParent();
+  LOG_INFO("m_currentValue move to parent");
   return true;
 }
+
+bool Json::onNextElement() {
+  switch (m_currentValue->GetRole()) {
+    case Value::KEY : {
+      m_expectNextValueType = Value::VALUE;
+      break;
+    }
+    case Value::VALUE : {
+      m_expectNextValueType = Value::KEY;
+      break;
+    }
+    case Value::ARRAY : {
+      m_expectNextValueType = Value::VALUE;
+      break;
+    }
+    case Value::OBJECT : {
+      m_expectNextValueType = Value::KEY;
+      break;
+    }
+    default: {
+      assert(0);
+    }
+  }
+  return true;}
 
 bool Json::onNextValueElement() {
   m_expectNextValueType = Value::VALUE;
@@ -221,6 +269,7 @@ bool Json::onNextKeyElement() {
     return false;
   m_expectNextValueType = Value::KEY;
   m_currentValue = v;
+  LOG_INFO("m_currentValue move to parent");
   return true;
 }
 bool Json::onNextArrayElement() {
@@ -228,20 +277,22 @@ bool Json::onNextArrayElement() {
   return true;
 }
 bool Json::onNextObject() {
-  Value *v = m_currentValue->GetParent();
-  if (!v)
-    return false;
-  Value *currentValue = new Value(Value::OBJECT);
-  m_currentValue->AddChild(currentValue);
-  m_currentValue = currentValue;
+  // Value *v = m_currentValue->GetParent();
+  // if (!v)
+  //   return false;
+  // Value *currentValue = new Value(Value::OBJECT);
+  // m_currentValue->AddChild(currentValue);
+  // m_currentValue = currentValue;
+  m_expectNextValueType = Value::OBJECT;
+  LOG_INFO("m_currentValue move to child");
   return true;
 }
 
 // ----------------------------------------
 
 Value::Value(const int &role)
-    : m_children(nullptr), m_parent(nullptr), m_data(nullptr), m_dataLength(0), m_childCount(0),
-      m_role(role) {}
+    : m_children(nullptr), m_parent(nullptr), m_data(nullptr), m_dataLength(0),
+      m_childCount(0), m_role(role) {}
 Value::Value(const Value &other) { Set(other.m_data, other.m_dataLength); }
 Value::~Value() {
   // TODO delete child node
@@ -313,23 +364,23 @@ void Value::Print(int indent) {
     std::cout << " ";
   }
   switch (m_role) {
-    case KEY:
-    case VALUE: {
-       std::cout << m_data;
-       break;
-    }
-    case ARRAY: {
-      std::cout << "[]";
-      break;
-    }
-    case OBJECT: {
-      std::cout << "{}";
-      break;
-    }
-    default: {
-      LOG_ERROR("invalid value role %d", m_role);
-      assert(0);
-    }
+  case KEY:
+  case VALUE: {
+    std::cout << m_data << "  " << m_role;
+    break;
+  }
+  case ARRAY: {
+    std::cout << "[]";
+    break;
+  }
+  case OBJECT: {
+    std::cout << "{}";
+    break;
+  }
+  default: {
+    LOG_ERROR("invalid value role %d", m_role);
+    assert(0);
+  }
   }
   std::cout << std::endl;
   for (int i = 0; i < m_childCount; ++i) {

@@ -50,6 +50,7 @@ public:
     NEXT_VALUE_ELEM = TOP_STATE << 7,
     NEXT_ARRAY_ELEM = TOP_STATE << 8,
     NEXT_OBJECT = TOP_STATE << 9,
+    NEXT_ELEM = TOP_STATE << 10,
   };
 
 public:

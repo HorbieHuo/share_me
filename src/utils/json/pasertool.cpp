@@ -3,7 +3,6 @@
 #include <assert.h>
 #include <memory.h>
 
-
 namespace share_me_utils {
 namespace json_inner {
 
@@ -76,51 +75,53 @@ int StateMachine::Next(const char &c) {
   int action = 0;
   switch (c) {
   case '{': {
-    action = onIntoObject();
-    break;
+    m_currentState = OUT_ELEM;
+    return INTO_OBJECT;
   }
   case '}': {
-    action = onOutObject();
-    break;
+    m_currentState = OUT_ELEM;
+    return GET_OUT_OBJECT;
   }
   case '[': {
-    action = onIntoArray();
-    break;
+    m_currentState = OUT_ELEM;
+    return INTO_ARRAY;
   }
   case ']': {
-    action = onOutArray();
-    break;
+    m_currentState = OUT_ELEM;
+    return GET_OUT_ARRAY;
   }
   case ',': {
-    action = onNextElementAfterComma();
-    break;
+    m_currentState = OUT_ELEM;
+    return NEXT_ELEM;
   }
   case ':': {
-    action = onNextElementAfterColon();
-    break;
+    m_currentState = OUT_ELEM;
+    return NEXT_ELEM;
   }
   case '-':
   case '"': {
-    if (has(IN_ELEM)) {
-      action = onOutElement();
+    if (m_currentState == IN_ELEM) {
+      m_currentState = OUT_ELEM;
+      return GET_OUT_ELEM;
     } else {
-      action = onIntoElement();
+      m_currentState = IN_ELEM;
+      return INTO_ELEM;
     }
-    break;
   }
   default: {
     if (c >= '0' && c <= '9') {
-      if (!has(IN_ELEM)) {
-        action = onIntoElement();
+      if (m_currentState == OUT_ELEM) {
+        m_currentState = IN_ELEM;
+      return INTO_ELEM;
       } else {
         assert(0);
+        return 0;
       }
     } else {
       return 0;
     }
   }
   }
-  return action;
 }
 
 int StateMachine::onIntoObject() {
@@ -226,7 +227,7 @@ int StateMachine::onNextElement() {
 }
 
 int StateMachine::onNextElementAfterColon() {
-  if (has(OUT_ELEM) && !has(ARRAY) && has(OBJECT)) {
+  if (has(OUT_ELEM) && has(OBJECT)) {
     m_currentState &= ~KEY_ELEM;
     m_currentState |= VALUE_ELEM;
     LOG_DEBUG("action = NEXT_VALUE_ELEM");
