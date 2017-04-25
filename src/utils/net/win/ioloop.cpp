@@ -170,7 +170,7 @@ DWORD _stdcall ServerWorkThread(LPVOID CompletionPortID) {
         if (bytesTransferred > 0) {
           if (acceptedSocket->OnRecvMsg(pIoData->databuff.buf,
                                         bytesTransferred)) {
-            LOG_ERROR("first deal accept data fail");
+            LOG_ERROR("first deal accept data fail, %d", WSAGetLastError());
           }
         }
         // acceptedSocket->PostRecvMsg(nullptr);
