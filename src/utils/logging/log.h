@@ -67,6 +67,11 @@ private:
   char *m_levelString[S_INVALID];
 };
 
+class LogClient {
+  private:
+  LogClient();
+};
+
 #define LOG_TRACE(formart, ...)                                                \
   (Log::Instance()->LogContent(__FILE__, __LINE__, __func__, Log::S_TRACE,     \
                                formart, __VA_ARGS__))

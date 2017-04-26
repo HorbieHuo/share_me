@@ -19,7 +19,7 @@ class Socket;
 #define START_ACCEPT ((unsigned long)1 << 3)
 #define END_THREAD ((unsigned long)1 << 4)
 
-#define MAX_THREAD_COUNT 1
+#define MAX_THREAD_COUNT 2
 
 /**
 * 结构体名称：PER_IO_DATA
