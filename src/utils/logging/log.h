@@ -20,7 +20,7 @@ namespace share_me_utils {
 
 #define LOG_BUFFER_LENGTH 1024
 
-class Log {
+class LogDef {
 public:
   enum LEVEL {
     S_TRACE = 0,
@@ -32,13 +32,25 @@ public:
     S_INVALID,
   };
 
+protected:
+  enum PREFIX_CELL_TYPE {
+    eDate = 0, //%d
+    eTime,     //%t
+    eFile,     //%F
+    eFunc,     //%f
+    eLine,     //%l
+    eTop,
+  };
+};
+
+class Log : public LogDef {
+public:
 public:
   static Log *Instance();
   bool SetPrefix(const char *prefix);
 
   void LogContent(const char *filename, const int lineno, const char *funcname,
                   int level, const char *format, ...);
-
 private:
   Log();
 
@@ -48,18 +60,10 @@ private:
   void setColor(int level);
   void resetColor();
   bool initColor();
- 
+
   char m_logBuffer[2 * LOG_BUFFER_LENGTH];
   char m_prefixBuffer[LOG_BUFFER_LENGTH];
 
-  enum PREFIX_CELL_TYPE {
-    eDate = 0, //%d
-    eTime,     //%t
-    eFile,     //%F
-    eFunc,     //%f
-    eLine,     //%l
-    eTop,
-  };
   char m_prefixSymbols[eTop];
   int m_prefixSwitchs[eTop];
   COLOR m_levelColor[S_INVALID];
@@ -67,9 +71,10 @@ private:
   char *m_levelString[S_INVALID];
 };
 
-class LogClient {
-  private:
+class LogClient : public LogDef {
+private:
   LogClient();
+  ~LogClient();
 };
 
 #define LOG_TRACE(formart, ...)                                                \
