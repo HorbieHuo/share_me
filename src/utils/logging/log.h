@@ -75,6 +75,9 @@ class LogClient : public LogDef {
 private:
   LogClient();
   ~LogClient();
+
+  private:
+  static thread_local LogClient* inst;
 };
 
 #define LOG_TRACE(formart, ...)                                                \
