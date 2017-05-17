@@ -30,9 +30,11 @@ bool Log::initColor() {
   m_levelColor[S_TRACE] = FOREGROUND_BLUE | FOREGROUND_INTENSITY;
   m_levelColor[S_DEBUG] = m_oldColorAttr | FOREGROUND_INTENSITY;
   m_levelColor[S_INFO] = FOREGROUND_GREEN | FOREGROUND_INTENSITY;
-  m_levelColor[S_WARN] = FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_INTENSITY;
+  m_levelColor[S_WARN] =
+      FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_INTENSITY;
   m_levelColor[S_ERROR] = FOREGROUND_RED | FOREGROUND_INTENSITY;
-  m_levelColor[S_FATAL] = FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY;
+  m_levelColor[S_FATAL] =
+      FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY;
   return true;
 }
 
@@ -105,7 +107,7 @@ void Log::LogContent(const char *filename, const int lineno,
   va_list args; //定义一个va_list类型的变量，用来储存单个参数
   va_start(args, format); //使args指向可变参数的第一个参数
   offset = vsnprintf(m_logBuffer + prefixLen, 2 * LOG_BUFFER_LENGTH - prefixLen,
-                    format, args); //必须用vprintf等带V的
+                     format, args); //必须用vprintf等带V的
   va_end(args);
   if (offset > 0) {
     offset = offset + prefixLen >= 2 * LOG_BUFFER_LENGTH - 2
@@ -174,4 +176,29 @@ int Log::generatePrefix(const char *filename, const char *funcname,
 
 void Log::formatString(const char *format, ...) { ; }
 
+// Logger implement
+
+Logger::Logger() {}
+Logger::~Logger() {}
+void Logger::SendLog(const char *filename, const int lineno,
+                     const char *funcname, int level, const char *format, ...) {
+  int offset = 0;
+  char *logBuffer = new char[LOG_BUFFER_LENGTH];
+  va_list args; //定义一个va_list类型的变量，用来储存单个参数
+  va_start(args, format); //使args指向可变参数的第一个参数
+  offset = vsnprintf(logBuffer, LOG_BUFFER_LENGTH, format,
+                     args); //必须用vprintf等带V的
+  va_end(args);
+  if (offset > 0) {
+    offset = offset + prefixLen >= LOG_BUFFER_LENGTH - 2
+                 ? (LOG_BUFFER_LENGTH - 2)
+                 : offset;
+  } else {
+    offset = 0;
+  }
+  logBuffer[offset] = '\n';
+  logBuffer[offset + 1] = '\0';
+  LogMsg msg = new LogMsg(filename, lineno, funcname, level, logBuffer);
+  Log::Instance()->AppendMsg(msg);
+}
 } // namespace share_me_utils

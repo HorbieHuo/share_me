@@ -20,6 +20,22 @@ namespace share_me_utils {
 
 #define LOG_BUFFER_LENGTH 1024
 
+struct LogMsg {
+  char *fileName;
+  int lineno;
+  char *funcName;
+  int logLevel;
+  char *msg;
+  LogMsg(char *fileName_, int lineno_, char *funcName_, int logLevel_,
+         char *msg_) {
+    fileName = fileName_;
+    lineno = lineno_;
+    funcName = funcName_;
+    logLevel = logLevel_;
+    msg = msg_;
+  }
+};
+
 class LogDef {
 public:
   enum LEVEL {
@@ -51,6 +67,9 @@ public:
 
   void LogContent(const char *filename, const int lineno, const char *funcname,
                   int level, const char *format, ...);
+
+  bool AppendMsg(LogMsg *msg);
+
 private:
   Log();
 
@@ -71,13 +90,17 @@ private:
   char *m_levelString[S_INVALID];
 };
 
-class LogClient : public LogDef {
+class Logger : public LogDef {
 private:
-  LogClient();
-  ~LogClient();
+  Logger();
+  ~Logger();
 
-  private:
-  static thread_local LogClient* inst;
+public:
+  void SendLog(const char *filename, const int lineno, const char *funcname,
+               int level, const char *format, ...);
+
+private:
+  static thread_local Logger *inst;
 };
 
 #define LOG_TRACE(formart, ...)                                                \
