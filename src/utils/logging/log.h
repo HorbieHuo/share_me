@@ -36,6 +36,11 @@ struct LogMsg {
   }
 };
 
+struct MsgNode {
+  MsgNode *next;
+  LogMsg *msg;
+}
+
 class LogDef {
 public:
   enum LEVEL {
@@ -80,6 +85,8 @@ private:
   void resetColor();
   bool initColor();
 
+  void out();
+
   char m_logBuffer[2 * LOG_BUFFER_LENGTH];
   char m_prefixBuffer[LOG_BUFFER_LENGTH];
 
@@ -88,6 +95,17 @@ private:
   COLOR m_levelColor[S_INVALID];
   COLOR m_oldColorAttr;
   char *m_levelString[S_INVALID];
+  class MsgQueue {
+  public:
+    MsgQueue();
+    bool Append(LogMsg *msg);
+    MsgNode *get();
+
+  private:
+    MsgNode *m_head;
+    MsgNode *m_tail;
+  };
+  MsgQueue c;
 };
 
 class Logger : public LogDef {

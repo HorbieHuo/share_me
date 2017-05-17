@@ -174,6 +174,30 @@ int Log::generatePrefix(const char *filename, const char *funcname,
   return (offset > 0 && offset < LOG_BUFFER_LENGTH) ? (int)offset : -1;
 }
 
+bool AppendMsg(LogMsg *msg) { return MsgQueue.Append(msg); }
+
+void out() {
+  // TODO 輸出內容后要刪除LogMsg
+}
+
+Log::MsgQueue::MsgQueue() : m_head(nullptr), m_tail(nullptr) {}
+bool Log::MsgQueue::Append(LogMsg *msg) {
+  MsgNode *node = new MsgNode;
+  node->msg = msg;
+  node->next = nullptr;
+  if (!m_head) {
+    m_head = node;
+  } else {
+    m_tail->next = node;
+  }
+  m_tail = node;
+}
+MsgNode *get() {
+  MsgNode *node = m_head;
+  m_head = nullptr;
+  m_tail = nullptr;
+  return node;
+}
 void Log::formatString(const char *format, ...) { ; }
 
 // Logger implement
