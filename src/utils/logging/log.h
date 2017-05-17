@@ -104,6 +104,7 @@ private:
   private:
     MsgNode *m_head;
     MsgNode *m_tail;
+    int m_count;
   };
   MsgQueue c;
 };

@@ -180,7 +180,7 @@ void out() {
   // TODO 輸出內容后要刪除LogMsg
 }
 
-Log::MsgQueue::MsgQueue() : m_head(nullptr), m_tail(nullptr) {}
+Log::MsgQueue::MsgQueue() : m_head(nullptr), m_tail(nullptr), m_count(0) {}
 bool Log::MsgQueue::Append(LogMsg *msg) {
   MsgNode *node = new MsgNode;
   node->msg = msg;
@@ -191,11 +191,13 @@ bool Log::MsgQueue::Append(LogMsg *msg) {
     m_tail->next = node;
   }
   m_tail = node;
+  ++m_count;
 }
 MsgNode *get() {
   MsgNode *node = m_head;
   m_head = nullptr;
   m_tail = nullptr;
+  m_count = 0;
   return node;
 }
 void Log::formatString(const char *format, ...) { ; }
