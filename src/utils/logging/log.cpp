@@ -181,6 +181,16 @@ void out() {
 }
 
 Log::MsgQueue::MsgQueue() : m_head(nullptr), m_tail(nullptr), m_count(0) {}
+Log::MsgQueue::~MsgQueue() {
+  MsgNode* node = nullptr;
+  while(m_head) {
+    node = m_head;
+    m_head = m_head->next;
+    delete node->msg;
+    delete node;
+  }
+  m_count = 0;
+}
 bool Log::MsgQueue::Append(LogMsg *msg) {
   MsgNode *node = new MsgNode;
   node->msg = msg;
@@ -193,13 +203,15 @@ bool Log::MsgQueue::Append(LogMsg *msg) {
   m_tail = node;
   ++m_count;
 }
-MsgNode *get() {
+MsgNode *Log::MsgQueue::get() {
   MsgNode *node = m_head;
   m_head = nullptr;
   m_tail = nullptr;
   m_count = 0;
   return node;
 }
+
+
 void Log::formatString(const char *format, ...) { ; }
 
 // Logger implement
