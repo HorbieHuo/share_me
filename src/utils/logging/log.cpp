@@ -174,9 +174,9 @@ int Log::generatePrefix(const char *filename, const char *funcname,
   return (offset > 0 && offset < LOG_BUFFER_LENGTH) ? (int)offset : -1;
 }
 
-bool AppendMsg(LogMsg *msg) { return MsgQueue.Append(msg); }
+bool Log::AppendMsg(LogMsg *msg) { return MsgQueue.Append(msg); }
 
-void out() {
+void Log::out() {
   // TODO 輸出內容后要刪除LogMsg
 }
 
@@ -192,6 +192,9 @@ Log::MsgQueue::~MsgQueue() {
   m_count = 0;
 }
 bool Log::MsgQueue::Append(LogMsg *msg) {
+  if (m_count > MAX_COUNT) {
+    return false;
+  }
   MsgNode *node = new MsgNode;
   node->msg = msg;
   node->next = nullptr;
@@ -202,6 +205,7 @@ bool Log::MsgQueue::Append(LogMsg *msg) {
   }
   m_tail = node;
   ++m_count;
+  return true;
 }
 MsgNode *Log::MsgQueue::get() {
   MsgNode *node = m_head;
@@ -209,6 +213,10 @@ MsgNode *Log::MsgQueue::get() {
   m_tail = nullptr;
   m_count = 0;
   return node;
+}
+
+void Log::MsgQueue::Stop() {
+  m_count = MAX_COUNT + 1;
 }
 
 

@@ -100,11 +100,13 @@ private:
     MsgQueue();
     bool Append(LogMsg *msg);
     MsgNode *get();
+    void Stop();
 
   private:
     MsgNode *m_head;
     MsgNode *m_tail;
     int m_count;
+    static const int MAX_COUNT;
   };
   MsgQueue c;
 };
