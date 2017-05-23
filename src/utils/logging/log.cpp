@@ -178,8 +178,26 @@ bool Log::AppendMsg(LogMsg *msg) { return MsgQueue.Append(msg); }
 
 void Log::out(LogMsg* msg) {
   // TODO 輸出內容后要刪除LogMsg
-  int prefixLen = 0;
-  prefixLen = generatePrefix(msg->fileName, msg->funcName, msg->lineno, msg->logLevel);
+  int offset = 0;
+  offset = generatePrefix(msg->fileName, msg->funcName, msg->lineno, msg->logLevel);
+  if (offset > 0) {
+    // m_prefixBuffer[offset] = '\0';
+    memcpy(m_logBuffer, m_prefixBuffer, offset);
+  } else
+    offset = 0;
+  offset += sprintf(m_logBuffer+offset, 2 * LOG_BUFFER_LENGTH-offset, "%s", msg->msg);
+  if (offset > 0) {
+    offset = offset >= 2 * LOG_BUFFER_LENGTH - 2
+                 ? (2 * LOG_BUFFER_LENGTH - 2)
+                 : offset;
+  } else {
+    offset = 0;
+  }
+  m_logBuffer[offset] = '\n';
+  m_logBuffer[offset + 1] = '\0';
+  setColor(msg->logLevel);
+  fprintf(stdout, "%s", m_logBuffer);
+  resetColor();
 }
 
 Log::MsgQueue::MsgQueue() : m_head(nullptr), m_tail(nullptr), m_count(0) {}
