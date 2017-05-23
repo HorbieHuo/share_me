@@ -63,6 +63,14 @@ Log *Log::Instance() {
   return inst;
 }
 
+bool Log::Start() {
+  DWORD threadID;
+  HANDLE threadHandle;
+  threadHandle =
+      CreateThread(NULL, 0, Log::Instance()->loop, nullptr, 0, &threadID);
+  return threadHandle != NULL;
+}
+
 bool Log::SetPrefix(const char *prefix) {
   if (!prefix)
     return false;
@@ -172,6 +180,10 @@ int Log::generatePrefix(const char *filename, const char *funcname,
   offset += snprintf(m_prefixBuffer + offset, 2 * LOG_BUFFER_LENGTH - offset,
                      "[%s]", m_levelString[level]);
   return (offset > 0 && offset < LOG_BUFFER_LENGTH) ? (int)offset : -1;
+}
+
+void Log::loop(THREAD_PARAM parma) {
+  // log 输出线程的主循环
 }
 
 bool Log::AppendMsg(LogMsg *msg) { return MsgQueue.Append(msg); }

@@ -15,6 +15,7 @@ namespace share_me_utils {
 #ifdef _WIN32
 #define localtime localtime_s
 #define sprintf sprintf_s
+#define THREAD_PARAM PVOID
 #endif // _WIN32
 #define COLOR unsigned short
 
@@ -68,6 +69,7 @@ class Log : public LogDef {
 public:
 public:
   static Log *Instance();
+  static bool Start();
   bool SetPrefix(const char *prefix);
 
   void LogContent(const char *filename, const int lineno, const char *funcname,
@@ -86,6 +88,7 @@ private:
   bool initColor();
 
   void out(LogMsg* msg);
+  void loop(THREAD_PARAM parma);
 
   char m_logBuffer[2 * LOG_BUFFER_LENGTH];
   char m_prefixBuffer[LOG_BUFFER_LENGTH];
