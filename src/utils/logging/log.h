@@ -85,7 +85,7 @@ private:
   void resetColor();
   bool initColor();
 
-  void out();
+  void out(LogMsg* msg);
 
   char m_logBuffer[2 * LOG_BUFFER_LENGTH];
   char m_prefixBuffer[LOG_BUFFER_LENGTH];

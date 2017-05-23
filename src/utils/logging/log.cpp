@@ -176,8 +176,10 @@ int Log::generatePrefix(const char *filename, const char *funcname,
 
 bool Log::AppendMsg(LogMsg *msg) { return MsgQueue.Append(msg); }
 
-void Log::out() {
+void Log::out(LogMsg* msg) {
   // TODO 輸出內容后要刪除LogMsg
+  int prefixLen = 0;
+  prefixLen = generatePrefix(msg->fileName, msg->funcName, msg->lineno, msg->logLevel);
 }
 
 Log::MsgQueue::MsgQueue() : m_head(nullptr), m_tail(nullptr), m_count(0) {}
