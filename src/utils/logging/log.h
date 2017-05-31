@@ -10,7 +10,8 @@
 #include <Windows.h>
 #endif
 
-namespace share_me_utils {
+namespace share_me_utils
+{
 
 #ifdef _WIN32
 #define localtime localtime_s
@@ -21,14 +22,16 @@ namespace share_me_utils {
 
 #define LOG_BUFFER_LENGTH 1024
 
-struct LogMsg {
+struct LogMsg
+{
   char *fileName;
   int lineno;
   char *funcName;
   int logLevel;
   char *msg;
   LogMsg(char *fileName_, int lineno_, char *funcName_, int logLevel_,
-         char *msg_) {
+         char *msg_)
+  {
     fileName = fileName_;
     lineno = lineno_;
     funcName = funcName_;
@@ -37,14 +40,24 @@ struct LogMsg {
   }
 };
 
-struct MsgNode {
+struct MsgNode
+{
   MsgNode *next;
   LogMsg *msg;
 }
 
-class LogDef {
+#define DESTROY_MSG_NODE(m) do {\
+  delete[] m->msg->msg;
+  delete m->msg;
+  delete m;
+  m = nullptr;
+} while(0)
+
+class LogDef
+{
 public:
-  enum LEVEL {
+  enum LEVEL
+  {
     S_TRACE = 0,
     S_DEBUG,
     S_WARN,
@@ -55,7 +68,8 @@ public:
   };
 
 protected:
-  enum PREFIX_CELL_TYPE {
+  enum PREFIX_CELL_TYPE
+  {
     eDate = 0, //%d
     eTime,     //%t
     eFile,     //%F
@@ -65,11 +79,12 @@ protected:
   };
 };
 
-class Log : public LogDef {
+class Log : public LogDef
+{
 public:
 public:
   static Log *Instance();
-  static bool Start();
+  bool Start();
   bool SetPrefix(const char *prefix);
 
   void LogContent(const char *filename, const int lineno, const char *funcname,
@@ -87,7 +102,7 @@ private:
   void resetColor();
   bool initColor();
 
-  void out(LogMsg* msg);
+  void out(LogMsg *msg);
   void loop(THREAD_PARAM parma);
 
   char m_logBuffer[2 * LOG_BUFFER_LENGTH];
@@ -98,7 +113,8 @@ private:
   COLOR m_levelColor[S_INVALID];
   COLOR m_oldColorAttr;
   char *m_levelString[S_INVALID];
-  class MsgQueue {
+  class MsgQueue
+  {
   public:
     MsgQueue();
     bool Append(LogMsg *msg);
@@ -111,10 +127,11 @@ private:
     int m_count;
     static const int MAX_COUNT;
   };
-  MsgQueue c;
+  MsgQueue m_msgQueue;
 };
 
-class Logger : public LogDef {
+class Logger : public LogDef
+{
 private:
   Logger();
   ~Logger();
@@ -127,23 +144,23 @@ private:
   static thread_local Logger *inst;
 };
 
-#define LOG_TRACE(formart, ...)                                                \
-  (Log::Instance()->LogContent(__FILE__, __LINE__, __func__, Log::S_TRACE,     \
+#define LOG_TRACE(formart, ...)                                            \
+  (Log::Instance()->LogContent(__FILE__, __LINE__, __func__, Log::S_TRACE, \
                                formart, __VA_ARGS__))
-#define LOG_DEBUG(formart, ...)                                                \
-  (Log::Instance()->LogContent(__FILE__, __LINE__, __func__, Log::S_DEBUG,     \
+#define LOG_DEBUG(formart, ...)                                            \
+  (Log::Instance()->LogContent(__FILE__, __LINE__, __func__, Log::S_DEBUG, \
                                formart, __VA_ARGS__))
-#define LOG_INFO(formart, ...)                                                 \
-  (Log::Instance()->LogContent(__FILE__, __LINE__, __func__, Log::S_INFO,      \
+#define LOG_INFO(formart, ...)                                            \
+  (Log::Instance()->LogContent(__FILE__, __LINE__, __func__, Log::S_INFO, \
                                formart, __VA_ARGS__))
-#define LOG_WARN(formart, ...)                                                 \
-  (Log::Instance()->LogContent(__FILE__, __LINE__, __func__, Log::S_DEBUG,     \
+#define LOG_WARN(formart, ...)                                             \
+  (Log::Instance()->LogContent(__FILE__, __LINE__, __func__, Log::S_DEBUG, \
                                formart, __VA_ARGS__))
-#define LOG_ERROR(formart, ...)                                                \
-  (Log::Instance()->LogContent(__FILE__, __LINE__, __func__, Log::S_ERROR,     \
+#define LOG_ERROR(formart, ...)                                            \
+  (Log::Instance()->LogContent(__FILE__, __LINE__, __func__, Log::S_ERROR, \
                                formart, __VA_ARGS__))
-#define LOG_FATAL(formart, ...)                                                \
-  (Log::Instance()->LogContent(__FILE__, __LINE__, __func__, Log::S_FATAL,     \
+#define LOG_FATAL(formart, ...)                                            \
+  (Log::Instance()->LogContent(__FILE__, __LINE__, __func__, Log::S_FATAL, \
                                formart, __VA_ARGS__))
 
 } // namespace share_me_utils

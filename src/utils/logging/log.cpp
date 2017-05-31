@@ -183,17 +183,26 @@ int Log::generatePrefix(const char *filename, const char *funcname,
 }
 
 void Log::loop(THREAD_PARAM parma) {
-  // log 输出线程的主循环
+  MsgNode* msgs = nullptr;
+  MsgNode* msg = nullptr;
+  while (true) {
+    msgs = m_msgQueue.get();
+    if (!msgs) continue;
+    while(msgs) {
+      msg = msgs;
+      out(msg->msg);
+      msgs = msgs->next;
+      DESTROY_MSG_NODE(msg);
+    }
+  }
 }
 
 bool Log::AppendMsg(LogMsg *msg) { return MsgQueue.Append(msg); }
 
 void Log::out(LogMsg* msg) {
-  // TODO 輸出內容后要刪除LogMsg
   int offset = 0;
   offset = generatePrefix(msg->fileName, msg->funcName, msg->lineno, msg->logLevel);
   if (offset > 0) {
-    // m_prefixBuffer[offset] = '\0';
     memcpy(m_logBuffer, m_prefixBuffer, offset);
   } else
     offset = 0;
