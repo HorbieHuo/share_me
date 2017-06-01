@@ -19,6 +19,9 @@ Log::Log() {
   m_levelString[S_FATAL] = "FATAL";
   SetPrefix("%d %t %F %f %l");
   initColor();
+#ifdef _WIN32
+  m_logEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+#endif
 }
 
 bool Log::initColor() {

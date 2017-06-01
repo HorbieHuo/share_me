@@ -17,6 +17,11 @@ namespace share_me_utils
 #define localtime localtime_s
 #define sprintf sprintf_s
 #define THREAD_PARAM PVOID
+#define INIT_NOTIFY_OBJECT CreateEvent(NULL, FALSE, FALSE, NULL)
+#define WAIT_NOTIFY WaitForSingleObject
+#define SEND_NOTIFY SetEvent
+#define CLEAR_NOTIFY ResetEvent
+#define DESTROY_NOTYFI CloseHandle
 #endif // _WIN32
 #define COLOR unsigned short
 
@@ -82,7 +87,6 @@ protected:
 class Log : public LogDef
 {
 public:
-public:
   static Log *Instance();
   bool Start();
   bool SetPrefix(const char *prefix);
@@ -91,6 +95,7 @@ public:
                   int level, const char *format, ...);
 
   bool AppendMsg(LogMsg *msg);
+  void Notify();
 
 private:
   Log();
@@ -104,6 +109,7 @@ private:
 
   void out(LogMsg *msg);
   void loop(THREAD_PARAM parma);
+  void waitForNotify();
 
   char m_logBuffer[2 * LOG_BUFFER_LENGTH];
   char m_prefixBuffer[LOG_BUFFER_LENGTH];
@@ -128,6 +134,10 @@ private:
     static const int MAX_COUNT;
   };
   MsgQueue m_msgQueue;
+
+#ifdef _WIN32
+  HANDLE m_logEvent;
+#endif
 };
 
 class Logger : public LogDef
