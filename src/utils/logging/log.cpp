@@ -190,7 +190,15 @@ void Log::loop(THREAD_PARAM parma) {
   MsgNode* msg = nullptr;
   while (true) {
     msgs = m_msgQueue.get();
-    if (!msgs) continue;
+    if (!msgs) {
+      DWORD dReturn = WaitForSingleObject(m_logEvent, 100)
+      switch (dReturn) {
+        case WAIT_TIMEOUT:
+        case WAIT_OBJECT_0: continue;
+        case WAIT_ABANDONED: break;
+        case WAIT_FAILED: break;
+      }
+    }
     while(msgs) {
       msg = msgs;
       out(msg->msg);
