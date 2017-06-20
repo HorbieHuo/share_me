@@ -1,9 +1,11 @@
 #include "log.h"
 #include <iostream>
 
-namespace share_me_utils {
+namespace share_me_utils
+{
 
-Log::Log() {
+Log::Log()
+{
   memset(m_prefixSwitchs, -1, sizeof(m_prefixSwitchs));
   m_prefixSymbols[eDate] = 'd';
   m_prefixSymbols[eTime] = 't';
@@ -24,7 +26,8 @@ Log::Log() {
 #endif
 }
 
-bool Log::initColor() {
+bool Log::initColor()
+{
   memset(m_levelColor, 0, sizeof(m_levelColor));
   HANDLE stdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
   CONSOLE_SCREEN_BUFFER_INFO csbiInfo;
@@ -41,32 +44,39 @@ bool Log::initColor() {
   return true;
 }
 
-void Log::setColor(int level) {
+void Log::setColor(int level)
+{
   static HANDLE stdHandle = NULL;
-  if (level >= S_TRACE && level < S_INVALID) {
-    if (!stdHandle) {
+  if (level >= S_TRACE && level < S_INVALID)
+  {
+    if (!stdHandle)
+    {
       stdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
     }
     SetConsoleTextAttribute(stdHandle, m_levelColor[level]);
   }
 }
 
-void Log::resetColor() {
+void Log::resetColor()
+{
   static HANDLE stdHandle = NULL;
-  if (!stdHandle) {
+  if (!stdHandle)
+  {
     stdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
   }
   SetConsoleTextAttribute(stdHandle, m_oldColorAttr);
 }
 
-Log *Log::Instance() {
+Log *Log::Instance()
+{
   static Log *inst = NULL;
   if (!inst)
     inst = new Log();
   return inst;
 }
 
-bool Log::Start() {
+bool Log::Start()
+{
   DWORD threadID;
   HANDLE threadHandle;
   threadHandle =
@@ -74,7 +84,8 @@ bool Log::Start() {
   return threadHandle != NULL;
 }
 
-bool Log::SetPrefix(const char *prefix) {
+bool Log::SetPrefix(const char *prefix)
+{
   if (!prefix)
     return false;
   if (*prefix == '\0')
@@ -83,15 +94,22 @@ bool Log::SetPrefix(const char *prefix) {
   const char *s = prefix;
   bool switchConfiged[eTop] = {false};
   memset(m_prefixSwitchs, -1, sizeof(m_prefixSwitchs));
-  for (int i = 0; s[i] != '\0'; ++i) {
-    if (s[i] == '%') {
+  for (int i = 0; s[i] != '\0'; ++i)
+  {
+    if (s[i] == '%')
+    {
       if (i >= 1 && s[i - 1] == '\\')
         continue;
-      for (int j = eDate; j < eTop; ++j) {
-        if (m_prefixSymbols[j] == s[i + 1]) {
-          if (!switchConfiged[j]) {
-            for (int k = eDate; k < eTop; ++k) {
-              if (m_prefixSwitchs[k] == -1) {
+      for (int j = eDate; j < eTop; ++j)
+      {
+        if (m_prefixSymbols[j] == s[i + 1])
+        {
+          if (!switchConfiged[j])
+          {
+            for (int k = eDate; k < eTop; ++k)
+            {
+              if (m_prefixSwitchs[k] == -1)
+              {
                 m_prefixSwitchs[k] = j;
                 break;
               }
@@ -106,25 +124,31 @@ bool Log::SetPrefix(const char *prefix) {
 }
 
 void Log::LogContent(const char *filename, const int lineno,
-                     const char *funcname, int level, const char *format, ...) {
+                     const char *funcname, int level, const char *format, ...)
+{
   int offset = 0;
   int prefixLen = 0;
   prefixLen = generatePrefix(filename, funcname, lineno, level);
-  if (prefixLen > 0) {
+  if (prefixLen > 0)
+  {
     // m_prefixBuffer[offset] = '\0';
     memcpy(m_logBuffer, m_prefixBuffer, prefixLen);
-  } else
+  }
+  else
     prefixLen = 0;
-  va_list args; //定义一个va_list类型的变量，用来储存单个参数
+  va_list args;           //定义一个va_list类型的变量，用来储存单个参数
   va_start(args, format); //使args指向可变参数的第一个参数
   offset = vsnprintf(m_logBuffer + prefixLen, 2 * LOG_BUFFER_LENGTH - prefixLen,
                      format, args); //必须用vprintf等带V的
   va_end(args);
-  if (offset > 0) {
+  if (offset > 0)
+  {
     offset = offset + prefixLen >= 2 * LOG_BUFFER_LENGTH - 2
                  ? (2 * LOG_BUFFER_LENGTH - 2)
                  : offset + prefixLen;
-  } else {
+  }
+  else
+  {
     offset = 0;
   }
   m_logBuffer[offset] = '\n';
@@ -135,14 +159,18 @@ void Log::LogContent(const char *filename, const int lineno,
 }
 
 int Log::generatePrefix(const char *filename, const char *funcname,
-                        const int lineno, int level) {
+                        const int lineno, int level)
+{
   memset(m_prefixBuffer, 0, LOG_BUFFER_LENGTH);
   size_t offset = 0;
-  for (int i = eDate; i < eTop; ++i) {
+  for (int i = eDate; i < eTop; ++i)
+  {
     if (m_prefixSwitchs[i] == -1)
       break;
-    switch (m_prefixSwitchs[i]) {
-    case eDate: {
+    switch (m_prefixSwitchs[i])
+    {
+    case eDate:
+    {
       time_t rawtime;
       struct tm timeinfo;
       time(&rawtime);
@@ -152,7 +180,8 @@ int Log::generatePrefix(const char *filename, const char *funcname,
       // offset += sprintf(m_prefixBuffer + offset, "%s", date);
       break;
     }
-    case eTime: {
+    case eTime:
+    {
       time_t rawtime;
       struct tm timeinfo;
       time(&rawtime);
@@ -162,22 +191,28 @@ int Log::generatePrefix(const char *filename, const char *funcname,
       // offset += sprintf(m_prefixBuffer + offset, "%s", time);
       break;
     }
-    case eFile: {
+    case eFile:
+    {
       offset += snprintf(m_prefixBuffer + offset,
                          2 * LOG_BUFFER_LENGTH - offset, "[%s]", filename);
       break;
     }
-    case eFunc: {
+    case eFunc:
+    {
       offset += snprintf(m_prefixBuffer + offset,
                          2 * LOG_BUFFER_LENGTH - offset, "[%s]", funcname);
       break;
     }
-    case eLine: {
+    case eLine:
+    {
       offset += snprintf(m_prefixBuffer + offset,
                          2 * LOG_BUFFER_LENGTH - offset, "[%d]", lineno);
       break;
     }
-    default: { break; }
+    default:
+    {
+      break;
+    }
     }
   }
   offset += snprintf(m_prefixBuffer + offset, 2 * LOG_BUFFER_LENGTH - offset,
@@ -185,44 +220,49 @@ int Log::generatePrefix(const char *filename, const char *funcname,
   return (offset > 0 && offset < LOG_BUFFER_LENGTH) ? (int)offset : -1;
 }
 
-void Log::loop(THREAD_PARAM parma) {
-  MsgNode* msgs = nullptr;
-  MsgNode* msg = nullptr;
-  while (true) {
+void Log::loop(THREAD_PARAM parma)
+{
+  MsgNode *msgs = nullptr;
+  MsgNode *msg = nullptr;
+  while (true)
+  {
     msgs = m_msgQueue.get();
-    if (!msgs) {
-      DWORD dReturn = WaitForSingleObject(m_logEvent, 100)
-      switch (dReturn) {
-        case WAIT_TIMEOUT:
-        case WAIT_OBJECT_0: continue;
-        case WAIT_ABANDONED: break;
-        case WAIT_FAILED: break;
-      }
+    if (!msgs)
+    {
+      waitForNotify();
+      continue;
     }
-    while(msgs) {
-      msg = msgs;
-      out(msg->msg);
-      msgs = msgs->next;
-      DESTROY_MSG_NODE(msg);
-    }
+  }
+  while (msgs)
+  {
+    msg = msgs;
+    out(msg->msg);
+    msgs = msgs->next;
+    DESTROY_MSG_NODE(msg);
   }
 }
 
 bool Log::AppendMsg(LogMsg *msg) { return MsgQueue.Append(msg); }
 
-void Log::out(LogMsg* msg) {
+void Log::out(LogMsg *msg)
+{
   int offset = 0;
   offset = generatePrefix(msg->fileName, msg->funcName, msg->lineno, msg->logLevel);
-  if (offset > 0) {
+  if (offset > 0)
+  {
     memcpy(m_logBuffer, m_prefixBuffer, offset);
-  } else
+  }
+  else
     offset = 0;
-  offset += sprintf(m_logBuffer+offset, 2 * LOG_BUFFER_LENGTH-offset, "%s", msg->msg);
-  if (offset > 0) {
+  offset += sprintf(m_logBuffer + offset, 2 * LOG_BUFFER_LENGTH - offset, "%s", msg->msg);
+  if (offset > 0)
+  {
     offset = offset >= 2 * LOG_BUFFER_LENGTH - 2
                  ? (2 * LOG_BUFFER_LENGTH - 2)
                  : offset;
-  } else {
+  }
+  else
+  {
     offset = 0;
   }
   m_logBuffer[offset] = '\n';
@@ -232,15 +272,30 @@ void Log::out(LogMsg* msg) {
   resetColor();
 }
 
-void Log::Notify() {
-  if (m_isRunning) return;
+void Log::Notify()
+{
+  if (m_isRunning)
+    return;
   SetEvent(m_logEvent);
 }
 
+void Log::waitForNotify()
+{
+  DWORD dReturn = WaitForSingleObject(m_logEvent, 100);
+  // switch (dReturn) {
+  //   case WAIT_TIMEOUT:
+  //   case WAIT_OBJECT_0: continue;
+  //   case WAIT_ABANDONED: break;
+  //   case WAIT_FAILED: break;
+  // }
+}
+
 Log::MsgQueue::MsgQueue() : m_head(nullptr), m_tail(nullptr), m_count(0) {}
-Log::MsgQueue::~MsgQueue() {
-  MsgNode* node = nullptr;
-  while(m_head) {
+Log::MsgQueue::~MsgQueue()
+{
+  MsgNode *node = nullptr;
+  while (m_head)
+  {
     node = m_head;
     m_head = m_head->next;
     delete node->msg;
@@ -248,23 +303,29 @@ Log::MsgQueue::~MsgQueue() {
   }
   m_count = 0;
 }
-bool Log::MsgQueue::Append(LogMsg *msg) {
-  if (m_count > MAX_COUNT) {
+bool Log::MsgQueue::Append(LogMsg *msg)
+{
+  if (m_count > MAX_COUNT)
+  {
     return false;
   }
   MsgNode *node = new MsgNode;
   node->msg = msg;
   node->next = nullptr;
-  if (!m_head) {
+  if (!m_head)
+  {
     m_head = node;
-  } else {
+  }
+  else
+  {
     m_tail->next = node;
   }
   m_tail = node;
   ++m_count;
   return true;
 }
-MsgNode *Log::MsgQueue::get() {
+MsgNode *Log::MsgQueue::get()
+{
   MsgNode *node = m_head;
   m_head = nullptr;
   m_tail = nullptr;
@@ -272,10 +333,10 @@ MsgNode *Log::MsgQueue::get() {
   return node;
 }
 
-void Log::MsgQueue::Stop() {
+void Log::MsgQueue::Stop()
+{
   m_count = MAX_COUNT + 1;
 }
-
 
 void Log::formatString(const char *format, ...) { ; }
 
@@ -284,24 +345,29 @@ void Log::formatString(const char *format, ...) { ; }
 Logger::Logger() {}
 Logger::~Logger() {}
 void Logger::SendLog(const char *filename, const int lineno,
-                     const char *funcname, int level, const char *format, ...) {
+                     const char *funcname, int level, const char *format, ...)
+{
   int offset = 0;
   char *logBuffer = new char[LOG_BUFFER_LENGTH];
-  va_list args; //定义一个va_list类型的变量，用来储存单个参数
+  va_list args;           //定义一个va_list类型的变量，用来储存单个参数
   va_start(args, format); //使args指向可变参数的第一个参数
   offset = vsnprintf(logBuffer, LOG_BUFFER_LENGTH, format,
                      args); //必须用vprintf等带V的
   va_end(args);
-  if (offset > 0) {
+  if (offset > 0)
+  {
     offset = offset + prefixLen >= LOG_BUFFER_LENGTH - 2
                  ? (LOG_BUFFER_LENGTH - 2)
                  : offset;
-  } else {
+  }
+  else
+  {
     offset = 0;
   }
   logBuffer[offset] = '\n';
   logBuffer[offset + 1] = '\0';
   LogMsg msg = new LogMsg(filename, lineno, funcname, level, logBuffer);
   Log::Instance()->AppendMsg(msg);
+  Log::Instance()->Notify();
 }
 } // namespace share_me_utils

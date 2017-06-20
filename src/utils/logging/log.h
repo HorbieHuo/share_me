@@ -51,38 +51,41 @@ struct MsgNode
   LogMsg *msg;
 }
 
-#define DESTROY_MSG_NODE(m) do {\
-  delete[] m->msg->msg;
-  delete m->msg;
-  delete m;
-  m = nullptr;
-} while(0)
+#define DESTROY_MSG_NODE(m) \
+  do                        \
+  {                         \
+    delete[] m->msg->msg;
+delete m->msg;
+delete m;
+m = nullptr;
+}
+while (0)
 
-class LogDef
-{
-public:
-  enum LEVEL
+  class LogDef
   {
-    S_TRACE = 0,
-    S_DEBUG,
-    S_WARN,
-    S_INFO,
-    S_ERROR,
-    S_FATAL,
-    S_INVALID,
-  };
+  public:
+    enum LEVEL
+    {
+      S_TRACE = 0,
+      S_DEBUG,
+      S_WARN,
+      S_INFO,
+      S_ERROR,
+      S_FATAL,
+      S_INVALID,
+    };
 
-protected:
-  enum PREFIX_CELL_TYPE
-  {
-    eDate = 0, //%d
-    eTime,     //%t
-    eFile,     //%F
-    eFunc,     //%f
-    eLine,     //%l
-    eTop,
+  protected:
+    enum PREFIX_CELL_TYPE
+    {
+      eDate = 0, //%d
+      eTime,     //%t
+      eFile,     //%F
+      eFunc,     //%f
+      eLine,     //%l
+      eTop,
+    };
   };
-};
 
 class Log : public LogDef
 {
@@ -171,6 +174,25 @@ private:
   (Log::Instance()->LogContent(__FILE__, __LINE__, __func__, Log::S_ERROR, \
                                formart, __VA_ARGS__))
 #define LOG_FATAL(formart, ...)                                            \
+  (Log::Instance()->LogContent(__FILE__, __LINE__, __func__, Log::S_FATAL, \
+                               formart, __VA_ARGS__))
+
+#define ASYNC_LOG_TRACE(formart, ...)                                      \
+  (Log::Instance()->LogContent(__FILE__, __LINE__, __func__, Log::S_TRACE, \
+                               formart, __VA_ARGS__))
+#define ASYNC_LOG_DEBUG(formart, ...)                                      \
+  (Log::Instance()->LogContent(__FILE__, __LINE__, __func__, Log::S_DEBUG, \
+                               formart, __VA_ARGS__))
+#define ASYNC_LOG_INFO(formart, ...)                                      \
+  (Log::Instance()->LogContent(__FILE__, __LINE__, __func__, Log::S_INFO, \
+                               formart, __VA_ARGS__))
+#define ASYNC_LOG_WARN(formart, ...)                                       \
+  (Log::Instance()->LogContent(__FILE__, __LINE__, __func__, Log::S_DEBUG, \
+                               formart, __VA_ARGS__))
+#define ASYNC_LOG_ERROR(formart, ...)                                      \
+  (Log::Instance()->LogContent(__FILE__, __LINE__, __func__, Log::S_ERROR, \
+                               formart, __VA_ARGS__))
+#define ASYNC_LOG_FATAL(formart, ...)                                      \
   (Log::Instance()->LogContent(__FILE__, __LINE__, __func__, Log::S_FATAL, \
                                formart, __VA_ARGS__))
 
