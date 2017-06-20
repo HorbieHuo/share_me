@@ -23,6 +23,9 @@ Log::Log()
   initColor();
 #ifdef _WIN32
   m_logEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+#elif defined(__unix__)
+  m_logMutex = PTHREAD_MUTEX_INITIALIZER;
+  m_logEvent = PTHREAD_COND_INITIALIZER;
 #endif
 }
 
@@ -273,20 +276,18 @@ void Log::out(LogMsg *msg)
   fprintf(stdout, "%s", m_logBuffer);
   resetColor();
 }
-
+#ifdef _WIN32
 void Log::Notify()
 {
   if (m_isRunning)
     return;
-  // SetEvent(m_logEvent);
-  SEND_NOTIFY(m_logEvent);
+  SetEvent(m_logEvent);
 }
 
 bool Log::waitForNotify()
 {
-  // DWORD dReturn = WaitForSingleObject(m_logEvent, 100);
   m_isRunning = false;
-  DWORD dReturn = WAIT_NOTIFY(m_logEvent, 100);
+  DWORD dReturn = WaitForSingleObject(m_logEvent, 100);
   m_isRunning = true;
   switch (dReturn)
   {
@@ -298,6 +299,33 @@ bool Log::waitForNotify()
     return false;
   }
 }
+
+#elif defined(__unix__)
+void Log::Notify()
+{
+  if (m_isRunning)
+    return;
+  pthread_mutex_lock(&m_logMutex);
+  pthread_cond_signal(&m_logEvent);
+  pthread_mutex_unlock(&m_logMutex);
+}
+
+bool Log::waitForNotify()
+{
+  m_isRunning = false;
+  pthread_mutex_lock(&m_logMutex);
+  int iReturn = pthread_cond_timewait(&m_logEvent, &m_logMutex, 100);
+  pthread_mutex_unlock(&m_logMutex);
+  m_isRunning = true;
+  switch (iReturn)
+  {
+  case 0:
+    return true;
+  default:
+    return false;
+  }
+}
+#endif // _win32
 
 Log::MsgQueue::MsgQueue() : m_head(nullptr), m_tail(nullptr), m_count(0) {}
 Log::MsgQueue::~MsgQueue()

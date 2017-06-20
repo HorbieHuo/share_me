@@ -22,6 +22,12 @@ namespace share_me_utils
 #define SEND_NOTIFY SetEvent
 #define CLEAR_NOTIFY ResetEvent
 #define DESTROY_NOTYFI CloseHandle
+#elif defined(__unix__)
+#define INIT_NOTIFY_OBJECT pthread_cond_destroy(NULL, FALSE, FALSE, NULL)
+#define WAIT_NOTIFY do {pthread_mutex_lock(&mutex);} while(0)
+#define SEND_NOTIFY SetEvent
+#define CLEAR_NOTIFY ResetEvent
+#define DESTROY_NOTYFI CloseHandle
 #endif // _WIN32
 #define COLOR unsigned short
 
@@ -141,6 +147,9 @@ private:
 
 #ifdef _WIN32
   HANDLE m_logEvent;
+#elif defined(__unix__)
+  pthread_cond_t m_logEvent;
+  pthread_mutex_t m_logMutex;
 #endif
 };
 
