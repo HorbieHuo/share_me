@@ -285,7 +285,9 @@ void Log::Notify()
 bool Log::waitForNotify()
 {
   // DWORD dReturn = WaitForSingleObject(m_logEvent, 100);
+  m_isRunning = false;
   DWORD dReturn = WAIT_NOTIFY(m_logEvent, 100);
+  m_isRunning = true;
   switch (dReturn)
   {
   case WAIT_TIMEOUT:
