@@ -234,7 +234,7 @@ void Log::out(LogMsg* msg) {
 
 void Log::Notify() {
   if (m_isRunning) return;
-  int res = SetEvent(m_logEvent);
+  SetEvent(m_logEvent);
 }
 
 Log::MsgQueue::MsgQueue() : m_head(nullptr), m_tail(nullptr), m_count(0) {}
