@@ -229,8 +229,10 @@ void Log::loop(THREAD_PARAM parma)
     msgs = m_msgQueue.get();
     if (!msgs)
     {
-      waitForNotify();
-      continue;
+      if (waitForNotify() == true)
+        continue;
+      else
+        break;
     }
   }
   while (msgs)
@@ -276,18 +278,23 @@ void Log::Notify()
 {
   if (m_isRunning)
     return;
-  SetEvent(m_logEvent);
+  // SetEvent(m_logEvent);
+  SEND_NOTIFY(m_logEvent);
 }
 
-void Log::waitForNotify()
+bool Log::waitForNotify()
 {
-  DWORD dReturn = WaitForSingleObject(m_logEvent, 100);
-  // switch (dReturn) {
-  //   case WAIT_TIMEOUT:
-  //   case WAIT_OBJECT_0: continue;
-  //   case WAIT_ABANDONED: break;
-  //   case WAIT_FAILED: break;
-  // }
+  // DWORD dReturn = WaitForSingleObject(m_logEvent, 100);
+  DWORD dReturn = WAIT_NOTIFY(m_logEvent, 100);
+  switch (dReturn)
+  {
+  case WAIT_TIMEOUT:
+  case WAIT_OBJECT_0:
+    return true;
+  case WAIT_ABANDONED:
+  case WAIT_FAILED:
+    return false;
+  }
 }
 
 Log::MsgQueue::MsgQueue() : m_head(nullptr), m_tail(nullptr), m_count(0) {}
