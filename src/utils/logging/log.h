@@ -119,6 +119,7 @@ private:
   COLOR m_levelColor[S_INVALID];
   COLOR m_oldColorAttr;
   char *m_levelString[S_INVALID];
+  bool m_isRunning;
   class MsgQueue
   {
   public:
