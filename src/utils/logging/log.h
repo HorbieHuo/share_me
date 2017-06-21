@@ -10,8 +10,7 @@
 #include <Windows.h>
 #endif
 
-namespace share_me_utils
-{
+namespace share_me_utils {
 
 #ifdef _WIN32
 #define localtime localtime_s
@@ -24,25 +23,26 @@ namespace share_me_utils
 #define DESTROY_NOTYFI CloseHandle
 #elif defined(__unix__)
 #define INIT_NOTIFY_OBJECT pthread_cond_destroy(NULL, FALSE, FALSE, NULL)
-#define WAIT_NOTIFY do {pthread_mutex_lock(&mutex);} while(0)
+#define WAIT_NOTIFY             \
+  do {                          \
+    pthread_mutex_lock(&mutex); \
+  } while (0)
 #define SEND_NOTIFY SetEvent
 #define CLEAR_NOTIFY ResetEvent
 #define DESTROY_NOTYFI CloseHandle
-#endif // _WIN32
+#endif  // _WIN32
 #define COLOR unsigned short
 
 #define LOG_BUFFER_LENGTH 1024
 
-struct LogMsg
-{
+struct LogMsg {
   char *fileName;
   int lineno;
   char *funcName;
   int logLevel;
   char *msg;
   LogMsg(char *fileName_, int lineno_, char *funcName_, int logLevel_,
-         char *msg_)
-  {
+         char *msg_) {
     fileName = fileName_;
     lineno = lineno_;
     funcName = funcName_;
@@ -51,27 +51,21 @@ struct LogMsg
   }
 };
 
-struct MsgNode
-{
+struct MsgNode {
   MsgNode *next;
   LogMsg *msg;
 }
 
 #define DESTROY_MSG_NODE(m) \
-  do                        \
-  {                         \
+  do {                      \
     delete[] m->msg->msg;
 delete m->msg;
 delete m;
 m = nullptr;
 }
-while (0)
-
-  class LogDef
-  {
-  public:
-    enum LEVEL
-    {
+while (0) class LogDef {
+   public:
+    enum LEVEL {
       S_TRACE = 0,
       S_DEBUG,
       S_WARN,
@@ -81,21 +75,19 @@ while (0)
       S_INVALID,
     };
 
-  protected:
-    enum PREFIX_CELL_TYPE
-    {
-      eDate = 0, //%d
-      eTime,     //%t
-      eFile,     //%F
-      eFunc,     //%f
-      eLine,     //%l
+   protected:
+    enum PREFIX_CELL_TYPE {
+      eDate = 0,  //%d
+      eTime,      //%t
+      eFile,      //%F
+      eFunc,      //%f
+      eLine,      //%l
       eTop,
     };
   };
 
-class Log : public LogDef
-{
-public:
+class Log : public LogDef {
+ public:
   static Log *Instance();
   bool Start();
   bool SetPrefix(const char *prefix);
@@ -106,7 +98,7 @@ public:
   bool AppendMsg(LogMsg *msg);
   void Notify();
 
-private:
+ private:
   Log();
 
   void formatString(const char *format, ...);
@@ -129,15 +121,14 @@ private:
   COLOR m_oldColorAttr;
   char *m_levelString[S_INVALID];
   bool m_isRunning;
-  class MsgQueue
-  {
-  public:
+  class MsgQueue {
+   public:
     MsgQueue();
     bool Append(LogMsg *msg);
     MsgNode *get();
     void Stop();
 
-  private:
+   private:
     MsgNode *m_head;
     MsgNode *m_tail;
     int m_count;
@@ -153,17 +144,16 @@ private:
 #endif
 };
 
-class Logger : public LogDef
-{
-private:
+class Logger : public LogDef {
+ private:
   Logger();
   ~Logger();
 
-public:
+ public:
   void SendLog(const char *filename, const int lineno, const char *funcname,
                int level, const char *format, ...);
 
-private:
+ private:
   static thread_local Logger *inst;
 };
 
@@ -205,6 +195,6 @@ private:
   (Log::Instance()->LogContent(__FILE__, __LINE__, __func__, Log::S_FATAL, \
                                formart, __VA_ARGS__))
 
-} // namespace share_me_utils
+}  // namespace share_me_utils
 
-#endif // SHARE_ME_LOG_LOG_H
+#endif  // SHARE_ME_LOG_LOG_H
