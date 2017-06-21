@@ -292,7 +292,7 @@ void Log::resetColor() {
   SetConsoleTextAttribute(stdHandle, m_oldColorAttr);
 }
 
-#endif  // _win32
+#endif  // __unix__
 
 Log::MsgQueue::MsgQueue() : m_head(nullptr), m_tail(nullptr), m_count(0) {}
 Log::MsgQueue::~MsgQueue() {
