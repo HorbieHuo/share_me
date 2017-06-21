@@ -27,41 +27,6 @@ Log::Log() {
 #endif
 }
 
-bool Log::initColor() {
-  memset(m_levelColor, 0, sizeof(m_levelColor));
-  HANDLE stdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
-  CONSOLE_SCREEN_BUFFER_INFO csbiInfo;
-  GetConsoleScreenBufferInfo(stdHandle, &csbiInfo);
-  m_oldColorAttr = csbiInfo.wAttributes;
-  m_levelColor[S_TRACE] = FOREGROUND_BLUE | FOREGROUND_INTENSITY;
-  m_levelColor[S_DEBUG] = m_oldColorAttr | FOREGROUND_INTENSITY;
-  m_levelColor[S_INFO] = FOREGROUND_GREEN | FOREGROUND_INTENSITY;
-  m_levelColor[S_WARN] =
-      FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_INTENSITY;
-  m_levelColor[S_ERROR] = FOREGROUND_RED | FOREGROUND_INTENSITY;
-  m_levelColor[S_FATAL] =
-      FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY;
-  return true;
-}
-
-void Log::setColor(int level) {
-  static HANDLE stdHandle = NULL;
-  if (level >= S_TRACE && level < S_INVALID) {
-    if (!stdHandle) {
-      stdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
-    }
-    SetConsoleTextAttribute(stdHandle, m_levelColor[level]);
-  }
-}
-
-void Log::resetColor() {
-  static HANDLE stdHandle = NULL;
-  if (!stdHandle) {
-    stdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
-  }
-  SetConsoleTextAttribute(stdHandle, m_oldColorAttr);
-}
-
 Log *Log::Instance() {
   static Log *inst = NULL;
   if (!inst) inst = new Log();
@@ -247,6 +212,28 @@ bool Log::waitForNotify() {
   }
 }
 
+bool Log::initColor() {
+  memset(m_levelColor, 0, sizeof(m_levelColor));
+  m_levelColor[S_TRACE] = "\033[34m";
+  m_levelColor[S_DEBUG] = "";
+  m_levelColor[S_INFO] = "\033[32m";
+  m_levelColor[S_WARN] = "\033[33m";
+  m_levelColor[S_ERROR] = "\033[31m";
+  m_levelColor[S_FATAL] = "\033[35m";
+  return true;
+}
+
+void Log::setColor(int level) {
+  static HANDLE stdHandle = NULL;
+  if (level >= S_TRACE && level < S_INVALID) {
+    fprintf(stdout, "%s", m_levelColor[level]);
+  }
+}
+
+void Log::resetColor() {
+  fprintf(stdout, "%s", "\033[0m");
+}
+
 #elif defined(__unix__)
 
 void Log::Notify() {
@@ -269,6 +256,42 @@ bool Log::waitForNotify() {
       return false;
   }
 }
+
+bool Log::initColor() {
+  memset(m_levelColor, 0, sizeof(m_levelColor));
+  HANDLE stdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+  CONSOLE_SCREEN_BUFFER_INFO csbiInfo;
+  GetConsoleScreenBufferInfo(stdHandle, &csbiInfo);
+  m_oldColorAttr = csbiInfo.wAttributes;
+  m_levelColor[S_TRACE] = FOREGROUND_BLUE | FOREGROUND_INTENSITY;
+  m_levelColor[S_DEBUG] = m_oldColorAttr | FOREGROUND_INTENSITY;
+  m_levelColor[S_INFO] = FOREGROUND_GREEN | FOREGROUND_INTENSITY;
+  m_levelColor[S_WARN] =
+      FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_INTENSITY;
+  m_levelColor[S_ERROR] = FOREGROUND_RED | FOREGROUND_INTENSITY;
+  m_levelColor[S_FATAL] =
+      FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY;
+  return true;
+}
+
+void Log::setColor(int level) {
+  static HANDLE stdHandle = NULL;
+  if (level >= S_TRACE && level < S_INVALID) {
+    if (!stdHandle) {
+      stdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+    }
+    SetConsoleTextAttribute(stdHandle, m_levelColor[level]);
+  }
+}
+
+void Log::resetColor() {
+  static HANDLE stdHandle = NULL;
+  if (!stdHandle) {
+    stdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+  }
+  SetConsoleTextAttribute(stdHandle, m_oldColorAttr);
+}
+
 #endif  // _win32
 
 Log::MsgQueue::MsgQueue() : m_head(nullptr), m_tail(nullptr), m_count(0) {}
