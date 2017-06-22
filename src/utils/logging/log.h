@@ -8,6 +8,8 @@
 
 #ifdef _WIN32
 #include <Windows.h>
+#elif defined(__unix__)
+#include <pthread.h>
 #endif
 
 namespace share_me_utils {
@@ -55,36 +57,37 @@ struct MsgNode {
   MsgNode *next;
   LogMsg *msg;
 }
-
 #define DESTROY_MSG_NODE(m) \
   do {                      \
-    delete[] m->msg->msg;
-delete m->msg;
-delete m;
-m = nullptr;
-}
-while (0) class LogDef {
-   public:
-    enum LEVEL {
-      S_TRACE = 0,
-      S_DEBUG,
-      S_WARN,
-      S_INFO,
-      S_ERROR,
-      S_FATAL,
-      S_INVALID,
-    };
+    delete[] m->msg->msg;   \
+    delete m->msg;          \
+    delete m;               \
+    m = nullptr;            \
+  }
 
-   protected:
-    enum PREFIX_CELL_TYPE {
-      eDate = 0,  //%d
-      eTime,      //%t
-      eFile,      //%F
-      eFunc,      //%f
-      eLine,      //%l
-      eTop,
-    };
+while (0) class LogDef {
+
+ public:
+  enum LEVEL {
+    S_TRACE = 0,
+    S_DEBUG,
+    S_WARN,
+    S_INFO,
+    S_ERROR,
+    S_FATAL,
+    S_INVALID,
   };
+
+ protected:
+  enum PREFIX_CELL_TYPE {
+    eDate = 0,  //%d
+    eTime,      //%t
+    eFile,      //%F
+    eFunc,      //%f
+    eLine,      //%l
+    eTop,
+  };
+};
 
 class Log : public LogDef {
  public:
