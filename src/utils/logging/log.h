@@ -21,7 +21,7 @@ namespace share_me_utils {
 #define COLOR unsigned short
 #elif defined(__unix__)
 #define COLOR char *
-#define THREAD_PARAM void*
+#define THREAD_PARAM void *
 #endif  // _WIN32
 
 #define LOG_BUFFER_LENGTH 1024
@@ -111,7 +111,7 @@ class Log : public LogDef {
   int m_prefixSwitchs[eTop];
   COLOR m_levelColor[S_INVALID];
   COLOR m_oldColorAttr;
-  char *m_levelString[S_INVALID];
+  char const *m_levelString[S_INVALID];
   bool m_isRunning;
   class MsgQueue {
    public:
@@ -147,7 +147,7 @@ class Logger : public LogDef {
                int level, const char *format, ...);
 
  private:
-  static thread_local Logger *inst;
+  static Logger *inst;
 };
 
 #define LOG_TRACE(formart, ...)                                            \

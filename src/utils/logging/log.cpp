@@ -22,8 +22,10 @@ Log::Log() {
 #ifdef _WIN32
   m_logEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 #elif defined(__unix__)
-  m_logMutex = PTHREAD_MUTEX_INITIALIZER;
-  m_logEvent = PTHREAD_COND_INITIALIZER;
+  // m_logMutex = PTHREAD_MUTEX_INITIALIZER;
+  // m_logEvent = PTHREAD_COND_INITIALIZER;
+  pthread_mutex_init(&m_logMutex, NULL);
+  pthread_cond_init(&m_logEvent, NULL);
 #endif
 }
 
