@@ -33,6 +33,7 @@ Log *Log::Instance() {
   return inst;
 }
 
+#ifdef _WIN32
 bool Log::Start() {
   DWORD threadID;
   HANDLE threadHandle;
@@ -40,7 +41,12 @@ bool Log::Start() {
       CreateThread(NULL, 0, Log::Instance()->loop, nullptr, 0, &threadID);
   return threadHandle != NULL;
 }
-
+#elif defined(__unix__)
+bool Log::Start() {
+  int isSuc = pthread_create(&m_thread, NULL, Log::Instance()->loop, NULL);
+  return isSuc == 0;
+}
+#endif //__unix__
 bool Log::SetPrefix(const char *prefix) {
   if (!prefix) return false;
   if (*prefix == '\0') return false;

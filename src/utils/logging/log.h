@@ -18,22 +18,11 @@ namespace share_me_utils {
 #define localtime localtime_s
 #define sprintf sprintf_s
 #define THREAD_PARAM PVOID
-#define INIT_NOTIFY_OBJECT CreateEvent(NULL, FALSE, FALSE, NULL)
-#define WAIT_NOTIFY WaitForSingleObject
-#define SEND_NOTIFY SetEvent
-#define CLEAR_NOTIFY ResetEvent
-#define DESTROY_NOTYFI CloseHandle
-#elif defined(__unix__)
-#define INIT_NOTIFY_OBJECT pthread_cond_destroy(NULL, FALSE, FALSE, NULL)
-#define WAIT_NOTIFY             \
-  do {                          \
-    pthread_mutex_lock(&mutex); \
-  } while (0)
-#define SEND_NOTIFY SetEvent
-#define CLEAR_NOTIFY ResetEvent
-#define DESTROY_NOTYFI CloseHandle
-#endif  // _WIN32
 #define COLOR unsigned short
+#elif defined(__unix__)
+#define COLOR char *
+#define THREAD_PARAM void*
+#endif  // _WIN32
 
 #define LOG_BUFFER_LENGTH 1024
 
@@ -56,17 +45,17 @@ struct LogMsg {
 struct MsgNode {
   MsgNode *next;
   LogMsg *msg;
-}
+};
+
 #define DESTROY_MSG_NODE(m) \
   do {                      \
     delete[] m->msg->msg;   \
     delete m->msg;          \
     delete m;               \
     m = nullptr;            \
-  }
+  } while (0)
 
-while (0) class LogDef {
-
+class LogDef {
  public:
   enum LEVEL {
     S_TRACE = 0,
@@ -144,6 +133,7 @@ class Log : public LogDef {
 #elif defined(__unix__)
   pthread_cond_t m_logEvent;
   pthread_mutex_t m_logMutex;
+  pthread_t m_thread;
 #endif
 };
 
