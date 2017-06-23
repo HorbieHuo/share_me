@@ -8,7 +8,7 @@ AUX_SOURCE_DIRECTORY(. SRC_LIST)
 
 
 ADD_LIBRARY(SLog STATIC ${SRC_LIST})
-
+# TARGET_LINK_LIBRARIES(SLog pthread)
 # IF(${UNITTEST})
     # add_executable(main main.cpp)
     # ADD_EXECUTABLE(log_unittest log_unittest.cpp)

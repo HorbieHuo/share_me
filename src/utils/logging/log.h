@@ -22,6 +22,7 @@ namespace share_me_utils {
 #elif defined(__unix__)
 #define COLOR char *
 #define THREAD_PARAM void *
+#define localtime localtime_r
 #endif  // _WIN32
 
 #define LOG_BUFFER_LENGTH 1024
@@ -101,7 +102,7 @@ class Log : public LogDef {
   bool initColor();
 
   void out(LogMsg *msg);
-  void loop(THREAD_PARAM parma);
+  static void* loop(THREAD_PARAM parma);
   void waitForNotify();
 
   char m_logBuffer[2 * LOG_BUFFER_LENGTH];

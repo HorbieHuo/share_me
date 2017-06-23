@@ -156,13 +156,14 @@ int Log::generatePrefix(const char *filename, const char *funcname,
   return (offset > 0 && offset < LOG_BUFFER_LENGTH) ? (int)offset : -1;
 }
 
-void Log::loop(THREAD_PARAM parma) {
+void* Log::loop(THREAD_PARAM parma) {
   MsgNode *msgs = nullptr;
   MsgNode *msg = nullptr;
+  logInst = Log::Instance();
   while (true) {
-    msgs = m_msgQueue.get();
+    msgs = logInst->m_msgQueue.get();
     if (!msgs) {
-      if (waitForNotify() == true)
+      if (logInst->waitForNotify() == true)
         continue;
       else
         break;
@@ -170,10 +171,11 @@ void Log::loop(THREAD_PARAM parma) {
   }
   while (msgs) {
     msg = msgs;
-    out(msg->msg);
+    logInst->out(msg->msg);
     msgs = msgs->next;
     DESTROY_MSG_NODE(msg);
   }
+  return 0;
 }
 
 bool Log::AppendMsg(LogMsg *msg) { return MsgQueue.Append(msg); }
