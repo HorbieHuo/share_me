@@ -189,7 +189,6 @@ void Log::loop(THREAD_PARAM parma) {
 bool Log::AppendMsg(LogMsg *msg) { return MsgQueue.Append(msg); }
 
 void Log::out(LogMsg* msg) {
-  // TODO 輸出內容后要刪除LogMsg
   int offset = 0;
   offset = generatePrefix(msg->fileName, msg->funcName, msg->lineno, msg->logLevel);
   if (offset > 0) {
