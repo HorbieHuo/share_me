@@ -28,13 +28,13 @@ namespace share_me_utils {
 #define LOG_BUFFER_LENGTH 1024
 
 struct LogMsg {
-  char *fileName;
+  const char *fileName;
   int lineno;
-  char *funcName;
+  const char *funcName;
   int logLevel;
-  char *msg;
-  LogMsg(char *fileName_, int lineno_, char *funcName_, int logLevel_,
-         char *msg_) {
+  const char *msg;
+  LogMsg(const char *fileName_, int lineno_, const char *funcName_, int logLevel_,
+         const char *msg_) {
     fileName = fileName_;
     lineno = lineno_;
     funcName = funcName_;
@@ -103,7 +103,7 @@ class Log : public LogDef {
 
   void out(LogMsg *msg);
   static void* loop(THREAD_PARAM parma);
-  void waitForNotify();
+  bool waitForNotify();
 
   char m_logBuffer[2 * LOG_BUFFER_LENGTH];
   char m_prefixBuffer[LOG_BUFFER_LENGTH];

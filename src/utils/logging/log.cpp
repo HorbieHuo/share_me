@@ -224,51 +224,6 @@ bool Log::waitForNotify() {
 
 bool Log::initColor() {
   memset(m_levelColor, 0, sizeof(m_levelColor));
-  m_levelColor[S_TRACE] = "\033[34m";
-  m_levelColor[S_DEBUG] = "";
-  m_levelColor[S_INFO] = "\033[32m";
-  m_levelColor[S_WARN] = "\033[33m";
-  m_levelColor[S_ERROR] = "\033[31m";
-  m_levelColor[S_FATAL] = "\033[35m";
-  return true;
-}
-
-void Log::setColor(int level) {
-  static HANDLE stdHandle = NULL;
-  if (level >= S_TRACE && level < S_INVALID) {
-    fprintf(stdout, "%s", m_levelColor[level]);
-  }
-}
-
-void Log::resetColor() {
-  fprintf(stdout, "%s", "\033[0m");
-}
-
-#elif defined(__unix__)
-
-void Log::Notify() {
-  if (m_isRunning) return;
-  pthread_mutex_lock(&m_logMutex);
-  pthread_cond_signal(&m_logEvent);
-  pthread_mutex_unlock(&m_logMutex);
-}
-
-bool Log::waitForNotify() {
-  m_isRunning = false;
-  pthread_mutex_lock(&m_logMutex);
-  int iReturn = pthread_cond_timewait(&m_logEvent, &m_logMutex, 100);
-  pthread_mutex_unlock(&m_logMutex);
-  m_isRunning = true;
-  switch (iReturn) {
-    case 0:
-      return true;
-    default:
-      return false;
-  }
-}
-
-bool Log::initColor() {
-  memset(m_levelColor, 0, sizeof(m_levelColor));
   HANDLE stdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
   CONSOLE_SCREEN_BUFFER_INFO csbiInfo;
   GetConsoleScreenBufferInfo(stdHandle, &csbiInfo);
@@ -301,6 +256,52 @@ void Log::resetColor() {
   }
   SetConsoleTextAttribute(stdHandle, m_oldColorAttr);
 }
+
+#elif defined(__unix__)
+
+bool Log::initColor() {
+  memset(m_levelColor, 0, sizeof(m_levelColor));
+  m_levelColor[S_TRACE] = "\033[34m";
+  m_levelColor[S_DEBUG] = "";
+  m_levelColor[S_INFO] = "\033[32m";
+  m_levelColor[S_WARN] = "\033[33m";
+  m_levelColor[S_ERROR] = "\033[31m";
+  m_levelColor[S_FATAL] = "\033[35m";
+  return true;
+}
+
+void Log::setColor(int level) {
+  static HANDLE stdHandle = NULL;
+  if (level >= S_TRACE && level < S_INVALID) {
+    fprintf(stdout, "%s", m_levelColor[level]);
+  }
+}
+
+void Log::resetColor() {
+  fprintf(stdout, "%s", "\033[0m");
+}
+
+void Log::Notify() {
+  if (m_isRunning) return;
+  pthread_mutex_lock(&m_logMutex);
+  pthread_cond_signal(&m_logEvent);
+  pthread_mutex_unlock(&m_logMutex);
+}
+
+bool Log::waitForNotify() {
+  m_isRunning = false;
+  pthread_mutex_lock(&m_logMutex);
+  int iReturn = pthread_cond_timewait(&m_logEvent, &m_logMutex, 100);
+  pthread_mutex_unlock(&m_logMutex);
+  m_isRunning = true;
+  switch (iReturn) {
+    case 0:
+      return true;
+    default:
+      return false;
+  }
+}
+
 
 #endif  // __unix__
 
@@ -357,7 +358,7 @@ void Logger::SendLog(const char *filename, const int lineno,
                      args);  //必须用vprintf等带V的
   va_end(args);
   if (offset > 0) {
-    offset = offset + prefixLen >= LOG_BUFFER_LENGTH - 2
+    offset = offset >= LOG_BUFFER_LENGTH - 2
                  ? (LOG_BUFFER_LENGTH - 2)
                  : offset;
   } else {
@@ -365,7 +366,7 @@ void Logger::SendLog(const char *filename, const int lineno,
   }
   logBuffer[offset] = '\n';
   logBuffer[offset + 1] = '\0';
-  LogMsg msg = new LogMsg(filename, lineno, funcname, level, logBuffer);
+  LogMsg *msg = new LogMsg(filename, lineno, funcname, level, logBuffer);
   Log::Instance()->AppendMsg(msg);
   Log::Instance()->Notify();
 }
