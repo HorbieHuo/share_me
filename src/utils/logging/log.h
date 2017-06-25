@@ -18,9 +18,11 @@ namespace share_me_utils {
 #define localtime localtime_s
 #define sprintf sprintf_s
 #define THREAD_PARAM PVOID
+#define THREAD_RETURN DWORD __stdcall
 #define COLOR unsigned short
 #elif defined(__unix__)
 #define COLOR char *
+#define THREAD_RETURN void *
 #define THREAD_PARAM void *
 #define localtime localtime_r
 #endif  // _WIN32
@@ -102,7 +104,7 @@ class Log : public LogDef {
   bool initColor();
 
   void out(LogMsg *msg);
-  static void* loop(THREAD_PARAM parma);
+  static THREAD_RETURN loop(THREAD_PARAM parma);
   bool waitForNotify();
 
   char m_logBuffer[2 * LOG_BUFFER_LENGTH];
@@ -117,6 +119,7 @@ class Log : public LogDef {
   class MsgQueue {
    public:
     MsgQueue();
+    ~MsgQueue();
     bool Append(LogMsg *msg);
     MsgNode *get();
     void Stop();

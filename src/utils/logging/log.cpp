@@ -40,7 +40,7 @@ bool Log::Start() {
   DWORD threadID;
   HANDLE threadHandle;
   threadHandle =
-      CreateThread(NULL, 0, Log::Instance()->loop, nullptr, 0, &threadID);
+      CreateThread(NULL, 0, Log::Instance()->loop, NULL, 0, &threadID);
   return threadHandle != NULL;
 }
 #elif defined(__unix__)
@@ -156,7 +156,7 @@ int Log::generatePrefix(const char *filename, const char *funcname,
   return (offset > 0 && offset < LOG_BUFFER_LENGTH) ? (int)offset : -1;
 }
 
-void* Log::loop(THREAD_PARAM parma) {
+THREAD_RETURN Log::loop(THREAD_PARAM parma) {
   MsgNode *msgs = nullptr;
   MsgNode *msg = nullptr;
   Log* logInst = Log::Instance();
@@ -178,7 +178,7 @@ void* Log::loop(THREAD_PARAM parma) {
   return 0;
 }
 
-bool Log::AppendMsg(LogMsg *msg) { return MsgQueue.Append(msg); }
+bool Log::AppendMsg(LogMsg *msg) { return m_msgQueue.Append(msg); }
 
 void Log::out(LogMsg *msg) {
   int offset = 0;
@@ -220,6 +220,7 @@ bool Log::waitForNotify() {
     case WAIT_FAILED:
       return false;
   }
+  return false;
 }
 
 bool Log::initColor() {
