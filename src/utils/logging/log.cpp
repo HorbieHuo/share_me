@@ -159,7 +159,7 @@ int Log::generatePrefix(const char *filename, const char *funcname,
 void* Log::loop(THREAD_PARAM parma) {
   MsgNode *msgs = nullptr;
   MsgNode *msg = nullptr;
-  logInst = Log::Instance();
+  Log* logInst = Log::Instance();
   while (true) {
     msgs = logInst->m_msgQueue.get();
     if (!msgs) {
