@@ -61,7 +61,7 @@ private:
   bool onGetOutArray();
   bool onIntoElement();
   bool onGetOutElement();
-  // bool onNextElement();
+  bool onNextElement();
   bool onNextObject();
   bool onNextArrayElement();
   bool onNextKeyElement();
