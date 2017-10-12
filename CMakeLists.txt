@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.6)
+cmake_minimum_required(VERSION 3.5)
 project(share_me)
 
 OPTION(UNITTEST "unittest, using googletest, default OFF" OFF)
@@ -8,6 +8,7 @@ MESSAGE(STATUS "operation system is ${CMAKE_SYSTEM}")
 
 IF(UNIX)
     ADD_DEFINITIONS(-D__unix__)
+    ADD_DEFINITIONS(-std=c++11)
     MESSAGE(STATUS "operation system is UNIX")
 ELSEIF(APPLE)
     ADD_DEFINITIONS(-D__unix__)

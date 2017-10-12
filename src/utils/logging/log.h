@@ -24,7 +24,8 @@ namespace share_me_utils {
 #define COLOR char *
 #define THREAD_RETURN void *
 #define THREAD_PARAM void *
-#define localtime localtime_r
+// #define localtime localtime_r
+#define localtime(a, b) localtime_r(b, a)
 #endif  // _WIN32
 
 #define LOG_BUFFER_LENGTH 1024

@@ -188,7 +188,7 @@ void Log::out(LogMsg *msg) {
     memcpy(m_logBuffer, m_prefixBuffer, offset);
   } else
     offset = 0;
-  offset += sprintf(m_logBuffer + offset, 2 * LOG_BUFFER_LENGTH - offset, "%s",
+  offset += snprintf(m_logBuffer + offset, 2 * LOG_BUFFER_LENGTH - offset, "%s",
                     msg->msg);
   if (offset > 0) {
     offset = offset >= 2 * LOG_BUFFER_LENGTH - 2 ? (2 * LOG_BUFFER_LENGTH - 2)
@@ -272,7 +272,7 @@ bool Log::initColor() {
 }
 
 void Log::setColor(int level) {
-  static HANDLE stdHandle = NULL;
+  // static HANDLE stdHandle = NULL;
   if (level >= S_TRACE && level < S_INVALID) {
     fprintf(stdout, "%s", m_levelColor[level]);
   }
@@ -291,8 +291,11 @@ void Log::Notify() {
 
 bool Log::waitForNotify() {
   m_isRunning = false;
+  struct timeval now;
+  struct timespec outtime;
+  gettimeofday()
   pthread_mutex_lock(&m_logMutex);
-  int iReturn = pthread_cond_timewait(&m_logEvent, &m_logMutex, 100);
+  int iReturn = pthread_cond_timedwait(&m_logEvent, &m_logMutex, 100);
   pthread_mutex_unlock(&m_logMutex);
   m_isRunning = true;
   switch (iReturn) {
