@@ -7,7 +7,7 @@ Condition::Condition() {
 }
 
 Condition::~Condition() {
-    pthread_cond_destroy(&m_mutex);
+    pthread_cond_destroy(&m_event);
 }
 
 bool Condition::Get() {}
@@ -30,4 +30,16 @@ bool Condition::Wait(DateTime& until) {
     int iReturn = pthread_cond_timedwait(&m_event, &m_mutex, &outTime);
     pthread_mutex_unlock(&m_mutex);
     return 0 == iReturn;
+}
+
+bool Condition::Notify(all=false) {
+    int resCode = 0;
+    pthread_mutex_lock(&m_mutex);
+    if (all) {
+        resCode = pthread_cond_broadcast(&m_event);
+    } else {
+        resCode = pthread_cond_signal(&m_event);
+    }
+    pthread_mutex_unlock(&m_mutex);
+    return resCode == 0;
 }

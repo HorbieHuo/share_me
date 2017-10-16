@@ -11,8 +11,9 @@ public:
 
     Get();
     Release();
-    Wait();
-    Wait(const DateTime& until);
+    bool Wait();
+    bool Wait(const DateTime& until);
+    bool Notify(all=false);
 
 private:
     pthread_cond_t m_event;
