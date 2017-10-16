@@ -1,7 +1,8 @@
 #ifndef SHARE_ME_SYS_CONDITON_H_
 #define SHARE_ME_SYS_CONDITON_H_
 
-#include "time.h"
+#include <pthread.h>
+#include "../datetime.h"
 
 class Condition {
 public:
@@ -11,7 +12,11 @@ public:
     Get();
     Release();
     Wait();
-    Wait(Time until);
+    Wait(const DateTime& until);
+
+private:
+    pthread_cond_t m_event;
+    pthread_mutex_t m_mutex;
 };
 
 #endif //SHARE_ME_SYS_CONDITON_H_
